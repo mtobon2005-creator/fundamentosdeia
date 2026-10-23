@@ -36,9 +36,9 @@ streamlit run app.py
 La app corre completa en el navegador con [stlite](https://github.com/whitphx/stlite) (Streamlit sobre Pyodide), sin servidor.
 `index.html` carga los mismos archivos `.py` del repositorio.
 
-1. En GitHub: **Settings → Pages → Build and deployment → Deploy from a branch**.
-2. Elige la rama de la app y la carpeta **/ (root)** y guarda.
-3. Abre `https://mtobon2005-creator.github.io/fundamentosdeia/` (tarda un par de minutos en aparecer).
+1. En GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions** (se guarda solo).
+2. El flujo `.github/workflows/pages.yml` publica al hacer push; también se puede lanzar a mano en la pestaña **Actions**.
+3. Abre `https://mtobon2005-creator.github.io/fundamentosdeia/` cuando termine el flujo (un par de minutos).
 
 La primera carga descarga Python, pandas y plotly en el navegador y puede tardar hasta un minuto.
 
