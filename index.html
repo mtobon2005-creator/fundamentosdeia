@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arturo Calle · Logística inteligente</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/stlite.css" />
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; color: #1c2e4a; }
+    #cargando { max-width: 520px; margin: 18vh auto; padding: 0 24px; text-align: center; }
+    #cargando h1 { font-size: 1.4rem; }
+    #cargando p { color: #7b8798; font-size: .95rem; }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div id="cargando">
+      <h1>Arturo Calle · Logística inteligente</h1>
+      <p>Cargando la app. La primera vez puede tardar hasta un minuto porque Python corre dentro de tu navegador.</p>
+    </div>
+  </div>
+  <script type="module">
+    import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@1.12.0/build/stlite.js";
+    mount(
+      {
+        entrypoint: "app.py",
+        requirements: ["plotly", "openpyxl"],
+        streamlitConfig: {
+          "theme.base": "light",
+          "theme.primaryColor": "#1c2e4a",
+          "theme.backgroundColor": "#ffffff",
+          "theme.secondaryBackgroundColor": "#f7f6f2",
+          "theme.textColor": "#1c2e4a",
+        },
+        files: {
+        "app.py": { url: "./app.py" },
+        "estado.py": { url: "./estado.py" },
+        "servicio.py": { url: "./servicio.py" },
+        "ui.py": { url: "./ui.py" },
+        "motor/__init__.py": { url: "./motor/__init__.py" },
+        "motor/difuso.py": { url: "./motor/difuso.py" },
+        "motor/experto.py": { url: "./motor/experto.py" },
+        "motor/genetico.py": { url: "./motor/genetico.py" },
+        "motor/juego.py": { url: "./motor/juego.py" },
+        "motor/red.py": { url: "./motor/red.py" },
+        "paginas/__init__.py": { url: "./paginas/__init__.py" },
+        "paginas/carga.py": { url: "./paginas/carga.py" },
+        "paginas/competencia.py": { url: "./paginas/competencia.py" },
+        "paginas/conocimiento.py": { url: "./paginas/conocimiento.py" },
+        "paginas/difusa.py": { url: "./paginas/difusa.py" },
+        "paginas/experto.py": { url: "./paginas/experto.py" },
+        "paginas/inicio.py": { url: "./paginas/inicio.py" },
+        "paginas/red.py": { url: "./paginas/red.py" }
+        },
+      },
+      document.getElementById("root"),
+    );
+  </script>
+</body>
+</html>

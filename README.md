@@ -32,6 +32,16 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
+## Publicar en GitHub Pages
+La app corre completa en el navegador con [stlite](https://github.com/whitphx/stlite) (Streamlit sobre Pyodide), sin servidor.
+`index.html` carga los mismos archivos `.py` del repositorio.
+
+1. En GitHub: **Settings → Pages → Build and deployment → Deploy from a branch**.
+2. Elige la rama de la app y la carpeta **/ (root)** y guarda.
+3. Abre `https://mtobon2005-creator.github.io/fundamentosdeia/` (tarda un par de minutos en aparecer).
+
+La primera carga descarga Python, pandas y plotly en el navegador y puede tardar hasta un minuto.
+
 ## Desplegar en Streamlit Community Cloud
 1. Entra a https://share.streamlit.io con tu cuenta de GitHub.
 2. **New app** → repositorio `mtobon2005-creator/fundamentosdeia`, rama `main`, archivo `app.py`.

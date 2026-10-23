@@ -3,6 +3,7 @@ from io import BytesIO
 
 import pandas as pd
 import streamlit as st
+from openpyxl.styles import Font
 
 from estado import COLUMNAS
 from motor import difuso, experto, genetico
@@ -79,7 +80,7 @@ def exportar_excel(hojas):
             df.to_excel(w, sheet_name=nombre[:31], index=False)
             ws = w.sheets[nombre[:31]]
             for celda in ws[1]:
-                celda.font = celda.font.copy(bold=True)
+                celda.font = Font(bold=True)
             for col in ws.columns:
                 ws.column_dimensions[col[0].column_letter].width = min(
                     42, max(len(str(c.value)) if c.value is not None else 0 for c in col) + 3)
