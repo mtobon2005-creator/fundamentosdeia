@@ -1,5 +1,7 @@
 # Arturo Calle · Logística inteligente
 
+Para observar el proyecto completo se puede revisar aquí https://fundamentosdeia-lyqrexugfztdad6nvoe4vh.streamlit.app/
+
 Proyecto de **Fundamentos de Inteligencia Artificial** (Mariana Tobón y Maria Clara Escobar).
 Una sola app de Streamlit que unifica los sprints del proyecto para agilizar el reparto de inventario
 desde la Bodega Itagüí hacia 9 tiendas del Valle de Aburrá (90 min disponibles, 15 min de atención por tienda).
