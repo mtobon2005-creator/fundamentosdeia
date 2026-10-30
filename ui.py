@@ -2,6 +2,7 @@
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 
 from estado import PAGINAS, ir_a
 from motor.red import EN_DISPUTA, ORIGEN, POS, TIEMPO_ATENCION, aristas, camino
@@ -253,3 +254,25 @@ def linea_tiempo(llegadas, total, tiempo, minuto_rival=None, tarde=()):
 
 def grafico(fig):
     st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+
+
+def subir_al_inicio():
+    """Al cambiar de página, vuelve al principio (Streamlit conserva el scroll por defecto)."""
+    ss = st.session_state
+    if ss.get("_ultima_pagina") == ss.pagina:
+        return
+    ss["_ultima_pagina"] = ss.pagina
+    components.html(
+        f"""<script>/* {ss.pagina} */
+        const subir = () => {{
+          const d = window.parent.document;
+          for (const sel of ['[data-testid="stMain"]', 'section.main', '[data-testid="stAppViewContainer"]']) {{
+            const el = d.querySelector(sel);
+            if (el) el.scrollTo({{ top: 0 }});
+          }}
+          window.parent.scrollTo({{ top: 0 }});
+        }};
+        subir(); setTimeout(subir, 80); setTimeout(subir, 400);
+        </script>""",
+        height=0,
+    )

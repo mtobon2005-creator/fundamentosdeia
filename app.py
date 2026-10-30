@@ -3,7 +3,7 @@ import streamlit as st
 
 import estado
 from paginas import carga, competencia, conocimiento, difusa, experto, inicio, red
-from ui import ICONOS, inyectar_css
+from ui import ICONOS, inyectar_css, subir_al_inicio
 
 st.set_page_config(page_title="Arturo Calle · Logística inteligente", page_icon="📦", layout="wide")
 estado.iniciar()
@@ -29,4 +29,5 @@ with st.sidebar:
     st.caption(f"Datos del día: {ss.tiempo} min · fin de semana {'sí' if ss.finde else 'no'}")
     st.caption("Mariana Tobón · Maria Clara Escobar")
 
+subir_al_inicio()
 VISTAS[st.session_state["pagina"]]()
