@@ -3,7 +3,7 @@ import streamlit as st
 
 import estado
 from paginas import carga, competencia, conocimiento, difusa, experto, inicio, red
-from ui import inyectar_css
+from ui import ICONOS, inyectar_css
 
 st.set_page_config(page_title="Arturo Calle · Logística inteligente", page_icon="📦", layout="wide")
 estado.iniciar()
@@ -20,9 +20,10 @@ VISTAS = {
 }
 
 with st.sidebar:
-    st.markdown('<div class="sidebar-titulo">Arturo Calle<br>Logística inteligente</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-titulo">Arturo Calle<br><span>Logística inteligente</span></div>', unsafe_allow_html=True)
     st.caption("Fundamentos de IA · Valle de Aburrá")
-    st.radio("Flujo", estado.PAGINAS, key="pagina", label_visibility="collapsed")
+    st.radio("Flujo", estado.PAGINAS, key="pagina", label_visibility="collapsed",
+             format_func=lambda p: f"{ICONOS[p]} {p}")
     st.divider()
     ss = st.session_state
     st.caption(f"Datos del día: {ss.tiempo} min · fin de semana {'sí' if ss.finde else 'no'}")

@@ -12,30 +12,54 @@ COLOR_PRIORIDAD = {"urgente": RUST, "media": BRASS, "baja": GRIS}
 
 CSS = f"""
 <style>
-.block-container {{ padding-top: 2.4rem; max-width: 1080px; }}
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+.stApp, .stMarkdown, .stCaption, label, p {{ font-family: 'Inter', system-ui, sans-serif; }}
+.block-container {{ padding-top: 2rem; max-width: 1120px; }}
 #MainMenu, footer {{ visibility: hidden; }}
-.eyebrow {{ font-size: .76rem; letter-spacing: .14em; text-transform: uppercase;
-            color: {BRASS}; font-weight: 700; margin-bottom: .1rem; }}
-h1 {{ color: {NAVY}; letter-spacing: -.01em; font-weight: 700 !important; }}
-h2, h3 {{ color: {NAVY}; }}
-.lead {{ font-size: 1.08rem; color: #4a5668; max-width: 64ch; margin: .2rem 0 1.2rem 0; }}
-.nota {{ font-size: .85rem; color: {GRIS}; }}
-.pill {{ display: inline-block; padding: 2px 11px; border-radius: 999px; font-size: .78rem;
-         font-weight: 600; border: 1px solid; margin: 0 6px 6px 0; white-space: nowrap; }}
-.paso {{ display: inline-block; padding: 5px 12px; border-radius: 6px; font-size: .88rem;
-         font-weight: 600; background: #eef1f6; color: {NAVY}; margin: 2px 0; }}
+h1, h2, h3 {{ font-family: 'Fraunces', Georgia, serif !important; color: {NAVY}; letter-spacing: -.01em; }}
+h1 {{ font-weight: 700 !important; font-size: 2.3rem !important; }}
+.eyebrow {{ font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: {BRASS}; font-weight: 700; }}
+.lead {{ font-size: 1.02rem; color: #5a6679; margin: .1rem 0 1rem 0; }}
+.nota {{ font-size: .82rem; color: {GRIS}; }}
+.pill {{ display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: .78rem; font-weight: 600;
+         border: 1px solid; margin: 0 6px 6px 0; white-space: nowrap; }}
+.paso {{ display: inline-block; padding: 6px 13px; border-radius: 999px; font-size: .86rem; font-weight: 600;
+         background: #eef1f6; color: {NAVY}; margin: 2px 0; }}
 .paso.ok {{ background: {NAVY}; color: #fff; }}
 .paso.late {{ background: {RUST}; color: #fff; }}
 .flecha {{ color: {BRASS}; font-weight: 700; margin: 0 6px; }}
-[data-testid="stMetric"] {{ background: #f7f6f2; border: 1px solid #e6e2d8;
-                            border-radius: 8px; padding: 12px 14px; }}
-[data-testid="stSidebar"] {{ border-right: 1px solid #e6e2d8; }}
-.sidebar-titulo {{ font-weight: 700; color: {NAVY}; font-size: 1.05rem; line-height: 1.2; }}
-table.matriz {{ border-collapse: collapse; width: 100%; }}
-table.matriz th, table.matriz td {{ border: 1px solid {LINEA}; padding: 12px 14px; text-align: center; }}
-table.matriz th {{ background: #f7f6f2; color: {NAVY}; font-size: .85rem; }}
+/* tarjetas de métricas */
+.kpis {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: .4rem 0 1rem; }}
+.kpi {{ background: linear-gradient(160deg, #ffffff, #f7f6f2); border: 1px solid #e6e2d8; border-radius: 14px;
+        padding: 14px 16px; box-shadow: 0 1px 2px rgba(28,46,74,.05); }}
+.kpi b {{ display: block; font-family: 'Fraunces', serif; font-size: 1.7rem; color: {NAVY}; line-height: 1.15; }}
+.kpi span {{ font-size: .78rem; color: {GRIS}; text-transform: uppercase; letter-spacing: .06em; }}
+.kpi.acento b {{ color: {BRASS}; }}
+[data-testid="stMetric"] {{ background: linear-gradient(160deg, #ffffff, #f7f6f2); border: 1px solid #e6e2d8;
+                            border-radius: 14px; padding: 12px 16px; }}
+/* contenedores con borde = tarjetas que se elevan */
+[data-testid="stVerticalBlockBorderWrapper"] {{ border-radius: 16px; transition: box-shadow .2s, transform .2s; }}
+[data-testid="stVerticalBlockBorderWrapper"]:hover {{ box-shadow: 0 8px 24px rgba(28,46,74,.10); }}
+.stButton > button {{ border-radius: 999px; font-weight: 600; }}
+.stTabs [data-baseweb="tab"] {{ font-weight: 600; }}
+/* barra lateral oscura */
+[data-testid="stSidebar"] {{ background: linear-gradient(180deg, #0f1b2d, #1c2e4a); border-right: none; }}
+[data-testid="stSidebar"] * {{ color: #e8edf5 !important; }}
+[data-testid="stSidebar"] hr {{ border-color: rgba(255,255,255,.15); }}
+.sidebar-titulo {{ font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.25rem; line-height: 1.15; color: #fff !important; }}
+.sidebar-titulo span {{ color: {BRASS} !important; }}
+[data-testid="stSidebar"] [role="radiogroup"] label {{ padding: 6px 10px; border-radius: 10px; }}
+[data-testid="stSidebar"] [role="radiogroup"] label:hover {{ background: rgba(255,255,255,.08); }}
+/* portada */
+.hero {{ background: linear-gradient(135deg, #0f1b2d, #1c2e4a); border-radius: 22px; padding: 30px 34px; margin-bottom: 14px; }}
+.hero .eyebrow {{ color: {BRASS}; }}
+.hero h1 {{ color: #fff !important; margin: .2rem 0 .3rem; }}
+.hero p {{ color: #b6c3d8; margin: 0; font-size: 1.02rem; }}
+table.matriz {{ border-collapse: separate; border-spacing: 8px; width: 100%; }}
+table.matriz th, table.matriz td {{ border-radius: 14px; padding: 14px; text-align: center; background: #f7f6f2; }}
+table.matriz th {{ color: {NAVY}; font-size: .85rem; }}
 table.matriz td.nash {{ background: #fbf3df; box-shadow: inset 0 0 0 2px {BRASS}; }}
-table.matriz .p {{ font-size: 1.35rem; font-weight: 700; color: {NAVY}; }}
+table.matriz .p {{ font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 700; color: {NAVY}; }}
 table.matriz .t {{ font-size: .78rem; color: {GRIS}; }}
 </style>
 """
@@ -61,6 +85,38 @@ def pasos(ruta, llegadas=None, tarde=()):
         extra = f" · min {llegadas[n]}" if llegadas and n in llegadas else ""
         bloques.append(f'<span class="{clase}">{corto(n)}{extra}</span>')
     return '<span class="flecha">→</span>'.join(bloques)
+
+
+ETIQUETA = {
+    "Concentrar|Expandirse": "Concentrar · rival se expande",
+    "Concentrar|Mantener": "Concentrar · rival mantiene",
+    "Distribuir|Expandirse": "Distribuir · rival se expande",
+    "Distribuir|Mantener": "Distribuir · rival mantiene",
+}
+ICONOS = {
+    "Inicio": ":material/home:", "1 · Red logística": ":material/route:",
+    "2 · Base de conocimiento": ":material/menu_book:", "3 · Sistema experto": ":material/rule:",
+    "4 · Competencia y ruta": ":material/swords:", "5 · Prioridad difusa": ":material/tune:",
+    "6 · Carga por tienda": ":material/local_shipping:",
+}
+
+
+def selector_escenario(clave):
+    """Selector de los 4 escenarios del juego (guarda la elección en el estado)."""
+    ss = st.session_state
+    sel = st.segmented_control("Escenario", list(ETIQUETA), default=ss.escenario, key=clave,
+                               format_func=lambda k: ETIQUETA[k] + ("  ·  Nash" if k == "Concentrar|Expandirse" else ""),
+                               label_visibility="collapsed")
+    if sel:
+        ss.escenario = sel
+    return ss.escenario
+
+
+def kpis(items):
+    """Fila de tarjetas: [(valor, etiqueta)] o [(valor, etiqueta, True)] para resaltar."""
+    html = "".join(f'<div class="kpi{" acento" if len(i) > 2 and i[2] else ""}"><b>{i[0]}</b><span>{i[1]}</span></div>'
+                   for i in items)
+    st.markdown(f'<div class="kpis">{html}</div>', unsafe_allow_html=True)
 
 
 def encabezado(sprint, titulo, bajada=None):
@@ -102,7 +158,7 @@ def _base(fig, altura):
     )
 
 
-def mapa(ruta=None, llegadas=None, tarde=(), subtitulos=None, zonas=True, altura=520):
+def mapa(ruta=None, llegadas=None, tarde=(), subtitulos=None, zonas=True, altura=520, camion=None):
     """Mapa esquemático de la red. 'ruta' se dibuja sobre los caminos más cortos."""
     fig = go.Figure()
     if zonas:
@@ -128,6 +184,11 @@ def mapa(ruta=None, llegadas=None, tarde=(), subtitulos=None, zonas=True, altura
         y=[(POS[a][1] + POS[b][1]) / 2 - 9 for a, b, _ in aristas()],
         mode="text", text=[f"{w}′" for _, _, w in aristas()],
         textfont=dict(size=10, color=GRIS), hoverinfo="skip"))
+    if camion:
+        fig.add_trace(go.Scatter(x=[p[0] for p in camion["recorrido"]], y=[p[1] for p in camion["recorrido"]],
+                                 mode="lines", line=dict(color=NAVY, width=5), hoverinfo="skip"))
+        fig.add_trace(go.Scatter(x=[camion["x"]], y=[camion["y"] - 4], mode="text", text=["🚚"],
+                                 textfont=dict(size=30), hoverinfo="skip"))
     orden = {t: i + 1 for i, t in enumerate(llegadas)} if llegadas else {}
     nombres = list(POS)
     fill, borde, simbolo, tam = [], [], [], []

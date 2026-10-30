@@ -7,18 +7,10 @@ import streamlit as st
 import servicio
 from motor import difuso, experto
 from motor.red import EN_DISPUTA
-from ui import (BRASS, COLOR_PRIORIDAD, DENIM, GRIS, LINEA, NAVY, RUST, corto, encabezado, grafico, navegacion,
-                nota, pasos, pastilla)
+from ui import (BRASS, COLOR_PRIORIDAD, DENIM, ETIQUETA, GRIS, LINEA, NAVY, RUST, corto, encabezado, grafico, kpis,
+                navegacion, nota, pasos, pastilla, selector_escenario)
 
 COLORES_SET = [DENIM, BRASS, RUST, GRIS]
-ETIQUETA = {
-    "Concentrar|Expandirse": "Concentrar / el rival se expande",
-    "Concentrar|Mantener": "Concentrar / el rival mantiene",
-    "Distribuir|Expandirse": "Distribuir / el rival se expande",
-    "Distribuir|Mantener": "Distribuir / el rival mantiene",
-}
-
-
 def _funciones_pertenencia(finde, marca=None):
     conjuntos = difuso.conjuntos_entrada(finde)
     fig = make_subplots(rows=2, cols=2, subplot_titles=list(conjuntos), vertical_spacing=0.2)
@@ -42,26 +34,45 @@ def _funciones_pertenencia(finde, marca=None):
 
 def render():
     ss = st.session_state
-    encabezado(
-        "Sprint 4 · Prioridad difusa",
-        "De “urgente / media / baja” a un grado de urgencia",
-        "Con reglas clásicas, un inventario de 19 unidades es “crítico” y uno de 21 no lo es. La lógica difusa "
-        "permite grados: cuánto cumple cada tienda cada condición, y de ahí un puntaje continuo de urgencia.",
-    )
+    encabezado("Sprint 4 · Prioridad difusa", "De “urgente / media / baja” a un grado de urgencia",
+               "En vez de cortar en un umbral, cada tienda cumple cada condición en cierto grado.")
     h = servicio.hechos_tupla(ss.hechos)
     clasica = servicio.clasica(h, ss.finde)
     dif = servicio.difusa(h, ss.finde)
 
-    t1, t2, t3 = st.tabs(["1 · Cómo funciona", "2 · Resultado por tienda", "3 · Impacto en la ruta"])
+    t0, t1, t2, t3 = st.tabs(["Pruébalo", "Cómo funciona", "Por tienda", "Impacto en la ruta"])
+
+    with t0:
+        st.caption("Mueve los datos de una tienda y compara la regla clásica con la difusa.")
+        c1, c2 = st.columns([2, 3])
+        with c1:
+            inv = st.slider("Inventario (u.)", 0, 150, 15)
+            ventas = st.slider("Ventas por semana", 0, 120, 55)
+            dias = st.slider("Días sin reabastecer", 0, 45, 12)
+            quejas = st.slider("Quejas de clientes", 0, 8, 1)
+        r = difuso.evaluar(inv, ventas, dias, quejas, ss.finde)
+        clasico, regla = experto.regla_prioridad(inv, ventas, dias, quejas, ss.finde)
+        with c2:
+            fig = go.Figure(go.Indicator(
+                mode="gauge+number", value=r["score"], number=dict(suffix=" / 100", font=dict(color=NAVY)),
+                gauge=dict(axis=dict(range=[0, 100]), bar=dict(color=NAVY),
+                           steps=[dict(range=[0, 35], color="#e7eaf0"), dict(range=[35, 65], color="#f3e3b8"),
+                                  dict(range=[65, 100], color="#f0c4b6")])))
+            fig.update_layout(height=230, margin=dict(l=20, r=20, t=10, b=0))
+            grafico(fig)
+            a, b = st.columns(2)
+            a.markdown("**Clásica**<br>" + pastilla(f"{clasico} · {regla}", COLOR_PRIORIDAD[clasico]), unsafe_allow_html=True)
+            b.markdown("**Difusa**<br>" + pastilla(f"{r['prioridad']} · {r['score']:.0f} pts", COLOR_PRIORIDAD[r["prioridad"]]),
+                       unsafe_allow_html=True)
+            fig = go.Figure(go.Bar(x=r["fuerza"][::-1], y=[x[0] for x in difuso.REGLAS_DIFUSAS][::-1], orientation="h",
+                                   marker_color=[{"alta": RUST, "media": BRASS, "baja": GRIS}[x[2]] for x in difuso.REGLAS_DIFUSAS][::-1]))
+            fig.update_layout(height=260, margin=dict(l=0, r=0, t=26, b=0), plot_bgcolor="white",
+                              title=dict(text="Fuerza de cada regla", font=dict(size=13, color=NAVY)),
+                              xaxis=dict(range=[0, 1], gridcolor=LINEA))
+            grafico(fig)
 
     with t1:
-        st.markdown(
-            "**1. Fuzzificación.** Cada dato se convierte en grados de pertenencia (0 a 1). Los conjuntos se centran en "
-            "los umbrales de las reglas clásicas: justo en el umbral la pertenencia es 0,5.\n\n"
-            "**2. Reglas.** Las mismas 10 reglas, pero con *Y = mínimo* y respetando su orden: una regla más urgente "
-            "que se activa apaga en proporción a las menos urgentes.\n\n"
-            "**3. Desfuzzificación.** Se combinan las salidas (*baja, media, alta*) y el centroide da un puntaje de 0 a 100."
-        )
+        st.markdown("**1 · Fuzzificar** (grados de 0 a 1)  →  **2 · Reglas** (Y = mínimo)  →  **3 · Centroide** (puntaje 0-100)")
         grafico(_funciones_pertenencia(ss.finde))
         c1, c2 = st.columns([3, 2])
         with c1:
@@ -76,9 +87,7 @@ def render():
                               xaxis=dict(gridcolor=LINEA), yaxis=dict(gridcolor=LINEA, tickvals=[0, .5, 1]),
                               legend=dict(orientation="h", y=-0.25))
             grafico(fig)
-        nota(f"Para que el algoritmo genético use el puntaje, se convierte a la misma escala del experto (1 a 3): "
-             f"valor = 1 + 2 × (puntaje − {difuso.S_MIN:.0f}) / ({difuso.S_MAX:.0f} − {difuso.S_MIN:.0f}). "
-             "Baja pura = 1, alta pura = 3.")
+        nota(f"Valor para el genético = 1 + 2 × (puntaje − {difuso.S_MIN:.0f}) / ({difuso.S_MAX:.0f} − {difuso.S_MIN:.0f}): baja pura 1, alta pura 3.")
 
     with t2:
         filas = [{"Tienda": t, "Clásica": clasica[t][0], "Puntaje (0-100)": round(dif[t]["score"], 1),
@@ -87,9 +96,9 @@ def render():
         st.dataframe(pd.DataFrame(filas), hide_index=True, width="stretch", column_config={
             "Puntaje (0-100)": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%.1f")})
         difieren = [f["Tienda"] for f in filas if f["Clásica"] != f["Difusa"]]
-        nota("La etiqueta difusa sale del valor: ≥ 2,5 urgente, ≥ 1,5 media, el resto baja. "
-             + (f"Difieren de la clásica: {', '.join(corto(t) for t in difieren)}." if difieren
-                else "En estos datos coinciden con la clásica, pero el puntaje distingue grados dentro de cada nivel."))
+        difieren = [f["Tienda"] for f in filas if f["Clásica"] != f["Difusa"]]
+        if difieren:
+            nota(f"Difieren de la clásica: {', '.join(corto(t) for t in difieren)}.")
 
         tienda = st.selectbox("Inspeccionar una tienda", list(dif), format_func=corto)
         r = dif[tienda]
@@ -112,14 +121,11 @@ def render():
                 "Activación": [round(x, 2) for x in r["activaciones"]],
                 "Fuerza final": [round(x, 2) for x in r["fuerza"]]}),
                 hide_index=True, width="stretch", height=250)
-        nota(f"{corto(tienda)}: inventario {inv}, ventas {ventas}/sem., {dias} días sin reabastecer, quejas: {quejas}. "
-             "La activación es el grado en que se cumple la regla; la fuerza final descuenta lo que apagan las reglas más urgentes.")
+        nota(f"{corto(tienda)}: inventario {inv}, ventas {ventas}/sem., {dias} días, quejas {quejas}.")
 
     with t3:
         P = ss.params
-        claves = list(ETIQUETA)
-        ss.escenario = st.selectbox("Escenario", claves, index=claves.index(ss.escenario), format_func=lambda k: ETIQUETA[k],
-                                    key="esc_difusa")
+        selector_escenario("esc_difusa")
         ac, rv = ss.escenario.split("|")
 
         def res(modo):
@@ -145,6 +151,5 @@ def render():
                           title=dict(text="Valor de cada tienda para el algoritmo genético", font=dict(size=14, color=NAVY)),
                           yaxis=dict(gridcolor=LINEA, range=[0, 3.2]), legend=dict(orientation="h", y=-0.25))
         grafico(fig)
-        nota("Con valores graduados, dos tiendas de prioridad media-alta pueden pesar más que una urgente: "
-             "el genético puede cambiar de ruta aunque el orden de urgencia no cambie.")
+        nota("Con valores graduados, dos tiendas medias pueden pesar más que una urgente: la ruta puede cambiar.")
     navegacion("5 · Prioridad difusa")

@@ -12,12 +12,8 @@ TEXTO_REGLA = {rid: cond for rid, cond, _ in experto.REGLAS}
 
 def render():
     ss = st.session_state
-    encabezado(
-        "Sprint 2 · Sistema experto",
-        "Quién necesita mercancía hoy",
-        "Edita los datos del día y el motor aplica las 10 reglas a cada tienda. Estos datos alimentan "
-        "todas las páginas siguientes.",
-    )
+    encabezado("Sprint 2 · Sistema experto", "Quién necesita mercancía hoy",
+               "Edita los datos: todo el recorrido se recalcula con ellos.")
 
     st.markdown("#### Memoria de trabajo: datos de hoy")
     c1, c2, c3 = st.columns([2, 2, 1])
@@ -59,6 +55,5 @@ def render():
         if plan["pendientes"]:
             st.markdown("**Quedan para el próximo reparto**")
             st.markdown("\n".join(f"- {t} ({clasica[t][0]})" for t in plan["pendientes"]))
-        nota("Se ordenan de más a menos urgente y se agregan mientras alcance el tiempo para ir, atender (15 min) "
-             "y volver a la bodega. Una tienda que ya no cabe queda pendiente, aunque la siguiente sí quepa.")
+        nota("De más a menos urgente, mientras alcance el tiempo para ir, atender y volver.")
     navegacion("3 · Sistema experto")

@@ -33,35 +33,26 @@ digraph G {
 
 
 def render():
-    encabezado(
-        "Sprint 2 · Base de conocimiento",
-        "Lo que el experto sabe antes de empezar el día",
-        "Un sistema experto separa tres cosas: lo que se sabe siempre (base de conocimiento), lo que pasa hoy "
-        "(memoria de trabajo) y quien razona con ambas (motor de inferencia).",
-    )
+    encabezado("Sprint 2 · Base de conocimiento", "Lo que el experto sabe de antemano",
+               "Base de conocimiento + memoria de trabajo + motor de inferencia.")
     c1, c2 = st.columns([3, 2])
     with c1:
         st.markdown("#### Cómo se conectan")
         st.graphviz_chart(ARQUITECTURA)
     with c2:
-        st.markdown("#### La base tiene cuatro piezas")
-        st.markdown(
-            "1. **Relaciones:** la red de calles y la jerarquía *urgente > media > baja*.\n"
-            "2. **Hechos generales:** umbrales fijos del negocio.\n"
-            "3. **Reglas:** 10 condiciones SI-ENTONCES.\n"
-            "4. **Orden:** se revisan de la más urgente a la más floja; la primera que se cumple gana."
-        )
+        st.markdown("#### La base tiene tres piezas")
+        st.markdown("1. **Relaciones:** red de calles y jerarquía de prioridades.\n"
+                    "2. **Hechos:** umbrales del negocio.\n"
+                    "3. **Reglas:** 10 SI-ENTONCES; gana la primera que se cumple.")
 
     st.markdown("#### 1 · Relaciones")
     r1, r2 = st.columns(2)
     with r1:
         filas = [{"Desde": a, "Hasta": b, "Minutos": w} for a, vs in RED.items() for b, w in vs if a < b]
         st.dataframe(pd.DataFrame(filas), hide_index=True, width="stretch", height=240)
-        nota(f"Tramos de la red; todos salen de la {ORIGEN} o conectan tiendas vecinas.")
     with r2:
         st.markdown(" ".join(pastilla(f"{p} · orden {o}", COLOR_PRIORIDAD[p]) for p, o in ORDEN_PRIORIDAD.items()),
                     unsafe_allow_html=True)
-        nota("Un número menor significa más urgente. Sirve para ordenar las tiendas del día.")
 
     st.markdown("#### 2 · Hechos generales (umbrales)")
     st.dataframe(
@@ -74,6 +65,4 @@ def render():
         a.markdown(f"**{rid}**")
         b.markdown(f"SI {cond}")
         c.markdown(pastilla(concl, COLOR_PRIORIDAD[concl]), unsafe_allow_html=True)
-    nota("El umbral de “ventas altas” baja de 50 a 40 si se acerca el fin de semana: es un dato del calendario, "
-         "igual para todas las tiendas.")
     navegacion("2 · Base de conocimiento")

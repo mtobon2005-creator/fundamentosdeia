@@ -48,3 +48,7 @@ La primera carga descarga Python, pandas y plotly en el navegador y puede tardar
 1. Entra a https://share.streamlit.io con tu cuenta de GitHub.
 2. **New app** → repositorio `mtobon2005-creator/fundamentosdeia`, rama `main`, archivo `app.py`.
 3. **Deploy**.
+
+## Imagen resumen y respaldo
+- `assets/resumen_proyecto.svg` / `.png`: imagen que resume el proyecto (la misma de la portada de la app).
+- La rama `respaldo-v1` guarda la versión de la app anterior al rediseño.

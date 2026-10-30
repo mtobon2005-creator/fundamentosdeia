@@ -5,15 +5,10 @@ import streamlit as st
 import servicio
 from motor import experto, genetico, juego
 from motor.red import EN_DISPUTA, ZONAS
-from ui import (BRASS, COLOR_PRIORIDAD, DENIM, GRIS, LINEA, NAVY, RUST, corto, encabezado, grafico,
-                linea_tiempo, mapa, navegacion, nota, pasos)
+from motor import recorrido
+from ui import (BRASS, DENIM, ETIQUETA, LINEA, NAVY, corto, encabezado, grafico, kpis, linea_tiempo, mapa,
+                navegacion, nota, pasos, selector_escenario)
 
-ETIQUETA = {
-    "Concentrar|Expandirse": "Concentrar / el rival se expande",
-    "Concentrar|Mantener": "Concentrar / el rival mantiene",
-    "Distribuir|Expandirse": "Distribuir / el rival se expande",
-    "Distribuir|Mantener": "Distribuir / el rival mantiene",
-}
 ZONA_DE = {t: z for z, ts in ZONAS.items() for t in ts}
 
 
@@ -44,23 +39,13 @@ def _tabla_pagos(seleccion):
 def render():
     ss = st.session_state
     P = ss.params
-    encabezado(
-        "Sprint 3 · Competencia y ruta",
-        "Qué hacer si el rival se expande",
-        "Si un competidor entra a El Poblado y el Centro (justo donde están varias tiendas), ¿conviene concentrar "
-        "el inventario ahí o repartirlo en todas? El juego decide la estrategia y el algoritmo genético arma la ruta.",
-    )
+    encabezado("Sprint 3 · Competencia y ruta", "Si el rival se expande, ¿qué hacemos?",
+               "El juego elige la estrategia; el algoritmo genético arma la ruta.")
     h = servicio.hechos_tupla(ss.hechos)
-
-    c1, c2 = st.columns([3, 2])
-    with c1:
-        claves = list(ETIQUETA)
-        ss.escenario = st.selectbox("Escenario", claves, index=claves.index(ss.escenario),
-                                    format_func=lambda k: ETIQUETA[k] + ("  ·  Nash" if tuple(k.split("|")) in juego.NASH else ""))
-    with c2:
-        ss.modo_ruta = st.radio("Prioridad usada", ["Clásica", "Difusa"], index=["Clásica", "Difusa"].index(ss.modo_ruta),
-                                horizontal=True, help="Clásica = urgente 3 / media 2 / baja 1, como en el notebook. "
-                                "Difusa = valor continuo de 1 a 3 (página 5).")
+    selector_escenario("esc_comp")
+    ss.modo_ruta = st.segmented_control("Prioridad usada", ["Clásica", "Difusa"], default=ss.modo_ruta,
+                                        key="modo_comp", help="Clásica: urgente 3 · media 2 · baja 1 (notebook). "
+                                        "Difusa: valor continuo de 1 a 3.") or ss.modo_ruta
     ac, rv = ss.escenario.split("|")
 
     with st.expander("Parámetros del modelo"):
@@ -82,28 +67,18 @@ def render():
     t_juego, t_esc, t_ruta, t_val = st.tabs(["1 · Juego", "2 · Escenario", "3 · Ruta óptima", "4 · Validación"])
 
     with t_juego:
-        st.markdown("Cada casilla muestra **(pago de Arturo Calle · pago del rival)**: participación de mercado "
-                    "esperada, de 0 a 10. *Son supuestos del modelo, no datos reales.*")
         st.markdown(_tabla_pagos(ss.escenario), unsafe_allow_html=True)
-        st.markdown("")
-        st.markdown(
-            "- Si AC concentra, al rival le conviene **expandirse** (5 > 4). Si AC distribuye, también (8 > 6): "
-            "expandirse es **dominante** para el rival.\n"
-            "- Sabiendo eso, a AC le conviene **concentrar** (6 > 3).\n"
-            "- (Distribuir, Mantener) daría (7, 6), mejor para ambos, pero no es estable: el rival tiene incentivo a expandirse."
-        )
+        nota("(pago de Arturo Calle · pago del rival), de 0 a 10. Son supuestos del modelo, no datos reales.")
         _, peor = juego.minimax_ac()
-        st.success(f"**Equilibrio de Nash: (Concentrar, Expandirse).** Minimax lo confirma: peor caso de concentrar "
-                   f"{peor['Concentrar']}, de distribuir {peor['Distribuir']}.")
+        c1, c2 = st.columns(2)
+        c1.success("**Expandirse es dominante** para el rival (5 > 4 y 8 > 6). Sabiéndolo, a AC le conviene "
+                   "**concentrar** (6 > 3).", icon=":material/check_circle:")
+        c2.info(f"**Minimax** lo confirma: peor caso de concentrar {peor['Concentrar']}, de distribuir {peor['Distribuir']}.",
+                icon=":material/balance:")
 
     with t_esc:
-        st.markdown(
-            "El juego no da una ruta: **cambia cuánto vale cada tienda**.\n"
-            "- **Concentrar:** las tiendas en disputa (El Poblado y Centro) valen × el efecto elegido, porque reciben más inventario.\n"
-            "- **Expandirse:** hay carrera. Si el camión llega a una tienda en disputa *después* del minuto "
-            f"{P['minuto']}, solo se rescata el {int(P['castigo'] * 100)} % del valor.\n"
-            "- **Mantener:** no hay carrera; el minuto de llegada no castiga."
-        )
+        kpis([(f"× {P['mult']:g}", "valor de tiendas en disputa si concentras"),
+              (f"min {P['minuto']}", "llega el rival"), (f"{int(P['castigo'] * 100)} %", "valor si llegas tarde")])
         base = servicio.valores_base(h, ss.finde, ss.modo_ruta)
         filas = [{"Tienda": t, "Zona": ZONA_DE[t] + (" · en disputa" if t in EN_DISPUTA else ""),
                   "Prioridad": clasica[t][0], "Valor base": round(base[t], 2),
@@ -112,35 +87,37 @@ def render():
                      hide_index=True, width="stretch")
 
     with t_ruta:
-        m = st.columns(4)
-        m[0].metric("Paradas", len(r["llegadas"]))
-        m[1].metric(f"Tiempo (de {ss.tiempo} min)", f"{r['total']} min")
-        m[2].metric("Fitness", f"{r['fitness']:.2f}")
         ok = abs(r["fitness"] - r["optimo"]) < 1e-9
-        m[3].metric("Vs. exhaustiva", "Coincide" if ok else f"Óptimo {r['optimo']:.2f}")
+        kpis([(len(r["llegadas"]), "paradas"), (f"{r['total']} min", f"de {ss.tiempo} disponibles"),
+              (f"{r['fitness']:.2f}", "fitness"), ("Óptima" if ok else f"Óptimo {r['optimo']:.2f}", "vs. búsqueda exhaustiva", ok)])
         st.markdown(pasos(r["ruta"], r["llegadas"], r["tarde"]), unsafe_allow_html=True)
+        segs = recorrido.segmentos(r["ruta"])
+        minuto = st.slider("Mueve el camión por el día (min)", 0, r["total"], 0, key=f"hora_{ss.escenario}_{ss.modo_ruta}_{r['total']}")
+        x, y, estado, recorrido_pts = recorrido.posicion(segs, minuto)
         izq, der = st.columns([3, 2])
         with izq:
             sub = {t: f"{clasica[t][0]} · vale {r['esc']['valor_tienda'][t]:.2f}" for t in r["esc"]["valor_tienda"]}
-            grafico(mapa(ruta=r["ruta"], llegadas=r["llegadas"], tarde=r["tarde"], subtitulos=sub))
+            grafico(mapa(ruta=r["ruta"], llegadas=r["llegadas"], tarde=r["tarde"], subtitulos=sub,
+                         camion={"x": x, "y": y, "recorrido": recorrido_pts}))
         with der:
-            for t, minuto in r["llegadas"].items():
+            st.markdown(f"### {estado}")
+            st.caption(f"Minuto {minuto} de {r['total']}")
+            for t, m_ in r["llegadas"].items():
                 if t not in EN_DISPUTA:
-                    estado = "fuera de disputa"
+                    et = "fuera de disputa"
                 elif not r["esc"]["hay_carrera"]:
-                    estado = "en disputa, sin carrera"
+                    et = "en disputa, sin carrera"
                 else:
-                    estado = "llega **después** del rival" if t in r["tarde"] else "llega **antes** del rival"
-                st.markdown(f"**min {minuto} · {t}**  \n{clasica[t][0]} · {estado}")
+                    et = "llega **después** del rival" if t in r["tarde"] else "llega **antes** del rival"
+                st.markdown(f"**min {m_} · {corto(t)}**  \n{clasica[t][0]} · {et}")
         grafico(linea_tiempo(r["llegadas"], r["total"], ss.tiempo,
                              P["minuto"] if r["esc"]["hay_carrera"] else None, r["tarde"]))
         with st.expander("Cómo funciona el algoritmo genético"):
             st.markdown(
-                "- **Cromosoma:** el orden en que se intenta visitar las 9 tiendas. Una tienda entra solo si alcanza el tiempo para ir, atenderla y volver.\n"
-                "- **Fitness:** valor entregado − 0,01 × minutos usados. El castigo por tiempo solo desempata rutas con el mismo valor.\n"
-                "- **Configuración:** población 30 · 60 generaciones · selección por ruleta · cruce por orden · mutación por intercambio (20 %) · elitismo 2.\n"
-                "- **Control:** búsqueda exhaustiva de todas las rutas factibles, para comprobar si el genético llegó al óptimo."
-            )
+                "- **Cromosoma:** orden de visita de las 9 tiendas; entra solo si alcanza el tiempo.\n"
+                "- **Fitness:** valor entregado − 0,01 × minutos.\n"
+                "- **Config.:** población 30 · 60 generaciones · ruleta · cruce por orden · mutación 20 % · elitismo 2.\n"
+                "- **Control:** búsqueda exhaustiva de todas las rutas factibles.")
 
     with t_val:
         filas, aciertos = [], 0
@@ -154,7 +131,7 @@ def render():
                     "Ruta (minuto de llegada)": " → ".join(f"{corto(t)} ({m_})" for t, m_ in x["llegadas"].items()),
                     "Tiempo": x["total"], "Fitness AG": round(x["fitness"], 2),
                     "Óptimo": round(x["optimo"], 2), "¿Coincide?": "Sí" if coincide else "No"})
-        st.markdown(f"**El genético coincide con el óptimo exhaustivo en {aciertos} de 4 escenarios** (semilla {P['semilla']}).")
+        kpis([(f"{aciertos} de 4", "escenarios donde el genético llega al óptimo", True), (P["semilla"], "semilla")])
         st.dataframe(pd.DataFrame(filas), hide_index=True, width="stretch")
 
         fig = go.Figure()
@@ -182,6 +159,5 @@ def render():
             st.markdown("**Reordenando la ruta**")
             st.metric("Fitness", f"{real['fitness']:.2f}", f"{real['fitness'] - f_vieja:+.2f}")
             st.markdown(pasos(real["ruta"], real["llegadas"], real["tarde"]), unsafe_allow_html=True)
-        nota("En ambos casos el rival se expande y Arturo Calle distribuye, así que los fitness se miden con las mismas reglas. "
-             "Los fitness de escenarios distintos no se comparan entre sí: esa comparación la hace la matriz de pagos.")
+        nota("Ambas rutas se miden con el rival expandiéndose y AC distribuyendo.")
     navegacion("4 · Competencia y ruta")
