@@ -44,6 +44,21 @@ h1 {{ font-weight: 700 !important; font-size: 2.3rem !important; }}
 [data-testid="stVerticalBlockBorderWrapper"]:hover {{ box-shadow: 0 8px 24px rgba(28,46,74,.10); }}
 .stButton > button {{ border-radius: 999px; font-weight: 600; }}
 .stTabs [data-baseweb="tab"] {{ font-weight: 600; }}
+/* perilla de los sliders: un pantalón */
+[data-testid="stSlider"] div[data-rac]:has(> div > input[type="range"]),
+[data-testid="stSlider"] [role="slider"] {{
+  width: 26px !important; height: 33px !important; border-radius: 0 !important;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 36'><path d='M5 2h18l3 32h-8l-4-18-4 18H2z' fill='%231c2e4a' stroke='%23b8892f' stroke-width='1.6' stroke-linejoin='round'/><path d='M5.6 6.2h16.8M14 6.2V16' stroke='%23d9a441' stroke-width='1.2' fill='none' stroke-dasharray='2 1.4'/><circle cx='14' cy='9' r='.9' fill='%23d9a441'/></svg>") center / contain no-repeat !important;
+  background-color: transparent !important; box-shadow: none !important; border: none !important;
+  transition: scale .15s;
+}}
+[data-testid="stSlider"] div[data-rac]:has(> div > input[type="range"]):hover,
+[data-testid="stSlider"] div[data-rac]:has(> div > input[type="range"]):focus-within,
+[data-testid="stSlider"] [role="slider"]:hover {{
+  scale: 1.18; outline: none !important;
+  filter: drop-shadow(0 2px 4px rgba(28,46,74,.35));
+}}
+[data-testid="stSlider"] div[role="group"] {{ margin-top: 22px; }}
 /* barra lateral oscura */
 [data-testid="stSidebar"] {{ background: linear-gradient(180deg, #0f1b2d, #1c2e4a); border-right: none; }}
 [data-testid="stSidebar"] * {{ color: #e8edf5 !important; }}
@@ -262,8 +277,7 @@ def subir_al_inicio():
     if ss.get("_ultima_pagina") == ss.pagina:
         return
     ss["_ultima_pagina"] = ss.pagina
-    components.html(
-        f"""<script>/* {ss.pagina} */
+    html = f"""<script>/* {ss.pagina} */
         const subir = () => {{
           const d = window.parent.document;
           for (const sel of ['[data-testid="stMain"]', 'section.main', '[data-testid="stAppViewContainer"]']) {{
@@ -273,6 +287,18 @@ def subir_al_inicio():
           window.parent.scrollTo({{ top: 0 }});
         }};
         subir(); setTimeout(subir, 80); setTimeout(subir, 400);
-        </script>""",
-        height=0,
-    )
+        </script>"""
+    if hasattr(st, "iframe"):  # st.components.v1.html está en desuso en las versiones nuevas
+        st.iframe(html, height=1)
+    else:
+        components.html(html, height=0)
+
+
+def secciones(clave, nombres):
+    """Selector de secciones que recuerda la elección aunque la página se recalcule (las pestañas se reiniciaban)."""
+    ss = st.session_state
+    sel = st.segmented_control("Sección", nombres, default=ss.get(clave, nombres[0]), key=f"w_{clave}",
+                               label_visibility="collapsed")
+    ss[clave] = sel or ss.get(clave, nombres[0])
+    st.write("")
+    return ss[clave]

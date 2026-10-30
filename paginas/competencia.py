@@ -6,7 +6,7 @@ import servicio
 from motor import genetico, juego, recorrido
 from motor.red import EN_DISPUTA, ZONAS
 from ui import (BRASS, DENIM, ETIQUETA, LINEA, NAVY, corto, encabezado, grafico, kpis, linea_tiempo, mapa,
-                navegacion, nota, pasos, selector_escenario)
+                navegacion, nota, pasos, secciones, selector_escenario)
 
 ZONA_DE = {t: z for z, ts in ZONAS.items() for t in ts}
 
@@ -63,9 +63,9 @@ def render():
 
     r = res(ac, rv)
     clasica = servicio.clasica(h, ss.finde)
-    t_juego, t_esc, t_ruta, t_val = st.tabs(["El juego", "Qué vale cada tienda", "La ruta", "¿Es la mejor?"])
+    sec = secciones("sec_comp", ["El juego", "Qué vale cada tienda", "La ruta", "¿Es la mejor?"])
 
-    with t_juego:
+    if sec == "El juego":
         st.markdown(_tabla_pagos(), unsafe_allow_html=True)
         nota("(Arturo Calle · rival): participación de mercado de 0 a 10. Son supuestos del modelo, no datos reales.")
         _, peor = juego.minimax_ac()
@@ -75,7 +75,7 @@ def render():
         c2.info(f"Peor caso: concentrar deja {peor['Concentrar']}, distribuir deja {peor['Distribuir']}. "
                 "Concentrar protege más.", icon=":material/balance:")
 
-    with t_esc:
+    if sec == "Qué vale cada tienda":
         kpis([(f"× {P['mult']:g}", "valor de tiendas en disputa si concentramos"),
               (f"min {P['minuto']}", "llega el rival"), (f"{int(P['castigo'] * 100)} %", "valor si llegamos tarde")])
         base = servicio.valores_base(h, ss.finde, ss.modo_ruta)
@@ -90,7 +90,7 @@ def render():
                           yaxis=dict(gridcolor=LINEA, visible=False))
         grafico(fig)
 
-    with t_ruta:
+    if sec == "La ruta":
         ok = abs(r["fitness"] - r["optimo"]) < 1e-9
         kpis([(len(r["llegadas"]), "tiendas visitadas"), (f"{r['total']} min", f"de {ss.tiempo} disponibles"),
               (f"{r['fitness']:.1f}", "puntaje de la ruta"),
@@ -109,7 +109,7 @@ def render():
         grafico(linea_tiempo(r["llegadas"], r["total"], ss.tiempo,
                              P["minuto"] if r["esc"]["hay_carrera"] else None, r["tarde"]))
 
-    with t_val:
+    if sec == "¿Es la mejor?":
         filas, aciertos = [], 0
         for a_ in juego.ESTRATEGIAS_AC:
             for r_ in juego.ESTRATEGIAS_RIVAL:

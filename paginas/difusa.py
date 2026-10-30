@@ -8,7 +8,7 @@ import servicio
 from motor import difuso, experto
 from motor.red import EN_DISPUTA
 from ui import (BRASS, COLOR_PRIORIDAD, DENIM, ETIQUETA, GRIS, LINEA, NAVY, RUST, corto, encabezado, grafico, kpis,
-                navegacion, nota, pasos, pastilla, selector_escenario)
+                navegacion, nota, pasos, pastilla, secciones, selector_escenario)
 
 COLORES_SET = [DENIM, BRASS, RUST, GRIS]
 def _funciones_pertenencia(finde, marca=None):
@@ -40,9 +40,9 @@ def render():
     clasica = servicio.clasica(h, ss.finde)
     dif = servicio.difusa(h, ss.finde)
 
-    t0, t2, t3, t1 = st.tabs(["Pruébalo", "Por tienda", "Efecto en la ruta", "Cómo funciona"])
+    sec = secciones("sec_difusa", ["Pruébalo", "Por tienda", "Efecto en la ruta", "Cómo funciona"])
 
-    with t0:
+    if sec == "Pruébalo":
         st.caption("Mueve los datos de una tienda y mira cómo cambia su urgencia.")
         c1, c2 = st.columns([2, 3])
         with c1:
@@ -71,7 +71,7 @@ def render():
                               xaxis=dict(range=[0, 1], gridcolor=LINEA))
             grafico(fig)
 
-    with t1:
+    if sec == "Cómo funciona":
         st.markdown("**1 · Medir en grados** (de 0 a 1)  →  **2 · Aplicar las reglas**  →  **3 · Resumir en un puntaje** (0 a 100)")
         grafico(_funciones_pertenencia(ss.finde))
         c1, c2 = st.columns([3, 2])
@@ -89,7 +89,7 @@ def render():
             grafico(fig)
         nota(f"Valor para el genético = 1 + 2 × (puntaje − {difuso.S_MIN:.0f}) / ({difuso.S_MAX:.0f} − {difuso.S_MIN:.0f}): baja pura 1, alta pura 3.")
 
-    with t2:
+    if sec == "Por tienda":
         filas = [{"Tienda": t, "Clásica": clasica[t][0], "Puntaje (0-100)": round(dif[t]["score"], 1),
                   "Valor (1-3)": round(dif[t]["valor"], 2), "Difusa": dif[t]["prioridad"]}
                  for t in sorted(dif, key=lambda t: -dif[t]["score"])]
@@ -123,7 +123,7 @@ def render():
                 hide_index=True, width="stretch", height=250)
         nota(f"{corto(tienda)}: inventario {inv}, ventas {ventas}/sem., {dias} días, quejas {quejas}.")
 
-    with t3:
+    if sec == "Efecto en la ruta":
         P = ss.params
         selector_escenario("esc_difusa")
         ac, rv = ss.escenario.split("|")
