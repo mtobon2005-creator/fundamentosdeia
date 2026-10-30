@@ -4,56 +4,47 @@ import streamlit as st
 import servicio
 from estado import COLUMNAS, hechos_notebook
 from motor import experto
-from motor.red import ORIGEN
-from ui import COLOR_PRIORIDAD, encabezado, grafico, mapa, navegacion, nota, pasos, pastilla
+from ui import COLOR_PRIORIDAD, corto, encabezado, grafico, kpis, mapa, navegacion, nota, pasos, pastilla
 
 TEXTO_REGLA = {rid: cond for rid, cond, _ in experto.REGLAS}
 
 
 def render():
     ss = st.session_state
-    encabezado("Sprint 2 · Sistema experto", "Quién necesita mercancía hoy",
-               "Edita los datos: todo el recorrido se recalcula con ellos.")
+    encabezado("Paso 3 · El experto en acción", "¿A qué tiendas vamos hoy?",
+               "El experto revisa cada tienda y arma el plan del día.")
+    resultado = st.container()  # se llena abajo, después de leer los datos editados
 
-    st.markdown("#### Memoria de trabajo: datos de hoy")
-    c1, c2, c3 = st.columns([2, 2, 1])
-    ss.finde = c1.toggle("Se acerca el fin de semana", value=ss.finde)
-    ss.tiempo = int(c2.number_input("Tiempo disponible hoy (min)", 30, 300, int(ss.tiempo), step=5))
-    if c3.button("Restablecer"):
-        ss.hechos = hechos_notebook()
-        ss.pop("editor_hechos", None)
-        st.rerun()
-    editado = st.data_editor(
-        ss.hechos, key="editor_hechos", num_rows="fixed", width="stretch",
-        column_config={c: st.column_config.NumberColumn(min_value=0, max_value=500, step=1) for c in COLUMNAS},
-    )
-    ss.hechos = editado.fillna(0)
+    with st.expander("Cambiar los datos de hoy", icon=":material/edit:"):
+        c1, c2, c3 = st.columns([2, 2, 1])
+        ss.finde = c1.toggle("Se acerca el fin de semana", value=ss.finde)
+        ss.tiempo = int(c2.number_input("Minutos disponibles", 30, 300, int(ss.tiempo), step=5))
+        if c3.button("Restablecer"):
+            ss.hechos = hechos_notebook()
+            ss.pop("editor_hechos", None)
+            st.rerun()
+        editado = st.data_editor(
+            ss.hechos, key="editor_hechos", num_rows="fixed", width="stretch",
+            column_config={c: st.column_config.NumberColumn(min_value=0, max_value=500, step=1) for c in COLUMNAS})
+        ss.hechos = editado.fillna(0)
+
     h = servicio.hechos_tupla(ss.hechos)
     clasica = servicio.clasica(h, ss.finde)
-
-    st.markdown("#### 3.1 Razonamiento: prioridad de cada tienda")
-    filas = [
-        {"Tienda": t, "Prioridad": p, "Regla": r, "Por qué": TEXTO_REGLA[r]}
-        for t, (p, r) in sorted(clasica.items(), key=lambda x: experto.ORDEN_PRIORIDAD[x[1][0]])
-    ]
-    cuenta = {p: sum(1 for f in filas if f["Prioridad"] == p) for p in experto.ORDEN_PRIORIDAD}
-    st.markdown(" ".join(pastilla(f"{n} {p}", COLOR_PRIORIDAD[p]) for p, n in cuenta.items()), unsafe_allow_html=True)
-    st.dataframe(pd.DataFrame(filas), hide_index=True, width="stretch")
-
-    st.markdown("#### 3.2 Solución: plan del día")
     plan = experto.plan_del_dia({t: p for t, (p, _) in clasica.items()}, ss.tiempo)
-    st.markdown(pasos(plan["ruta"], plan["llegadas"]), unsafe_allow_html=True)
-    m = st.columns(3)
-    m[0].metric("Tiendas visitadas", len(plan["llegadas"]))
-    m[1].metric(f"Tiempo total (de {ss.tiempo} min)", f"{plan['total']} min")
-    m[2].metric("Pendientes", len(plan["pendientes"]))
-    izq, der = st.columns([3, 2])
-    with izq:
-        grafico(mapa(ruta=plan["ruta"], llegadas=plan["llegadas"], zonas=False,
+    cuenta = {p: sum(1 for v in clasica.values() if v[0] == p) for p in experto.ORDEN_PRIORIDAD}
+
+    with resultado:
+        kpis([(f"{cuenta['urgente']}", "tiendas urgentes", True), (len(plan["llegadas"]), "tiendas hoy"),
+              (f"{plan['total']} de {ss.tiempo} min", "tiempo usado"), (len(plan["pendientes"]), "quedan para después")])
+        grafico(mapa(ruta=plan["ruta"], llegadas=plan["llegadas"], zonas=False, altura=600,
                      subtitulos={t: p for t, (p, _) in clasica.items()}))
-    with der:
+        st.markdown(pasos(plan["ruta"], plan["llegadas"]), unsafe_allow_html=True)
+
+    with st.expander("¿Por qué cada tienda tiene esa prioridad?"):
+        st.markdown(" ".join(pastilla(f"{n} {p}", COLOR_PRIORIDAD[p]) for p, n in cuenta.items()), unsafe_allow_html=True)
+        filas = [{"Tienda": t, "Prioridad": p, "Regla": r, "Porque": TEXTO_REGLA[r]}
+                 for t, (p, r) in sorted(clasica.items(), key=lambda x: experto.ORDEN_PRIORIDAD[x[1][0]])]
+        st.dataframe(pd.DataFrame(filas), hide_index=True, width="stretch")
         if plan["pendientes"]:
-            st.markdown("**Quedan para el próximo reparto**")
-            st.markdown("\n".join(f"- {t} ({clasica[t][0]})" for t in plan["pendientes"]))
-        nota("De más a menos urgente, mientras alcance el tiempo para ir, atender y volver.")
-    navegacion("3 · Sistema experto")
+            nota("Quedan para el próximo reparto: " + ", ".join(corto(t) for t in plan["pendientes"]) + ".")
+    navegacion("3 · El plan del día")

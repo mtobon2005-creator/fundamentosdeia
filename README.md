@@ -8,12 +8,12 @@ desde la Bodega Itagüí hacia 9 tiendas del Valle de Aburrá (90 min disponible
 
 | Página | Sprint | Qué hace |
 |---|---|---|
-| 1 · Red logística | 1 | Red de tiempos, Dijkstra (camino más corto) y A* (recorrido completo) |
-| 2 · Base de conocimiento | 2 | Relaciones, umbrales y 10 reglas SI-ENTONCES del experto |
-| 3 · Sistema experto | 2 | Memoria de trabajo editable, razonamiento y plan del día |
-| 4 · Competencia y ruta | 3 | Teoría de juegos (Nash), escenario competitivo y algoritmo genético |
-| 5 · Prioridad difusa | 4 | Prioridad difusa (Mamdani) que reemplaza urgente/media/baja |
-| 6 · Carga por tienda | 4 | Capa difusa (Sugeno) que decide cuántas unidades enviar a cada tienda; exporta a Excel |
+| 1 · El mapa | 1 | Red de tiempos, Dijkstra (camino más corto) y A* (recorrido completo) |
+| 2 · El experto | 2 | Relaciones, umbrales y 10 reglas SI-ENTONCES del experto |
+| 3 · El plan del día | 2 | Memoria de trabajo editable, razonamiento y plan del día |
+| 4 · El rival | 3 | Teoría de juegos (Nash), escenario competitivo y algoritmo genético |
+| 5 · Grados de urgencia | 4 | Prioridad difusa (Mamdani) que reemplaza urgente/media/baja |
+| 6 · La carga | 4 | Capa difusa (Sugeno) que decide cuántas unidades enviar a cada tienda; exporta a Excel |
 
 Con la prioridad clásica y la semilla 42, la app reproduce los resultados de los notebooks
 (recorrido A* de 104 min, plan del día de 68 min, ruta Oviedo → Unicentro en el equilibrio de Nash).

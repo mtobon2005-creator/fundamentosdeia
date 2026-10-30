@@ -8,12 +8,12 @@ from motor.genetico import PARAMS_NOTEBOOK
 COLUMNAS = ["Inventario", "Ventas/sem", "Días sin reabastecer", "Quejas"]
 PAGINAS = [
     "Inicio",
-    "1 · Red logística",
-    "2 · Base de conocimiento",
-    "3 · Sistema experto",
-    "4 · Competencia y ruta",
-    "5 · Prioridad difusa",
-    "6 · Carga por tienda",
+    "1 · El mapa",
+    "2 · El experto",
+    "3 · El plan del día",
+    "4 · El rival",
+    "5 · Grados de urgencia",
+    "6 · La carga",
 ]
 
 

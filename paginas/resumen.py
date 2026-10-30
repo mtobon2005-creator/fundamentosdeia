@@ -5,12 +5,12 @@ NAVY, NAVY2, BRASS, RUST, DENIM = "#0f1b2d", "#1c2e4a", "#d9a441", "#e2703e", "#
 FUENTE = "Helvetica, Arial, sans-serif"
 
 TARJETAS = [
-    ("1", "Red logística", "Dijkstra · A*", "104 min las 9 tiendas"),
-    ("2", "Sistema experto", "10 reglas SI-ENTONCES", "4 urgentes · 2 medias"),
-    ("3", "Competencia y ruta", "Nash + algoritmo genético", "68 min · 2 paradas"),
-    ("4", "Lógica difusa", "Prioridad 0-100 + carga", "Unidades por tienda"),
+    ("1", "El mapa", "Cuánto tarda cada tramo", "104 min las 9 tiendas"),
+    ("2", "El experto", "10 reglas de prioridad", "4 urgentes · 2 medias"),
+    ("3", "El rival", "Teoría de juegos + buscador de rutas", "68 min · 2 paradas"),
+    ("4", "Los grados", "Urgencia de 0 a 100 + unidades", "Unidades por tienda"),
 ]
-FLUJO = ["Datos", "Reglas", "Juego", "Ruta", "Difusa", "Unidades"]
+FLUJO = ["Datos", "Reglas", "Rival", "Ruta", "Grados", "Carga"]
 
 
 def _t(x, y, texto, tam=14, color="#ffffff", peso="400", ancla="start", extra=""):
@@ -26,7 +26,7 @@ def svg_resumen():
          f'<stop offset="0" stop-color="{NAVY}"/><stop offset="1" stop-color="{NAVY2}"/></linearGradient></defs>',
          '<rect width="1200" height="600" rx="22" fill="url(#fondo)"/>',
          _t(44, 52, "ARTURO CALLE · LOGÍSTICA INTELIGENTE", 13, BRASS, "700", extra='letter-spacing="2"'),
-         _t(44, 84, "De una ruta a una decisión completa", 28, "#ffffff", "700")]
+         _t(44, 84, "De una ruta a una decisión completa", 30, "#ffffff", "700")]
     # zonas en disputa
     s.append(f'<ellipse cx="{p["C.C. El Tesoro"][0] + 80}" cy="{p["C.C. Oviedo"][1] - 10}" rx="190" ry="60" '
              f'transform="rotate(-18 {p["C.C. El Tesoro"][0] + 80} {p["C.C. Oviedo"][1] - 10})" fill="{BRASS}" '
@@ -54,17 +54,17 @@ def svg_resumen():
     for n, dx, dy, anc in [("C.C. Oviedo", 22, 5, "start"), ("Unicentro", 22, 5, "start"), ("C.C. El Tesoro", 16, 5, "start"),
                            ("C.C. Premium Plaza", 16, 5, "start"), ("Puerta del Norte", 18, 5, "start"),
                            ("C.C. San Diego", 16, 5, "start"), ("C.C. Mayorca", -16, 5, "end"),
-                           ("Sabaneta Plaza", 18, 5, "start"), ("Los Molinos Envigado", 0, 30, "middle"),
+                           ("Sabaneta Plaza", 18, 5, "start"), ("Los Molinos Envigado", 40, 30, "middle"),
                            (ORIGEN, 0, 34, "middle")]:
         x, y = p[n]
-        s.append(_t(f"{x + dx:.0f}", f"{y + dy:.0f}", n.replace("C.C. ", ""), 12, "#dfe7f3", "600", anc))
+        s.append(_t(f"{x + dx:.0f}", f"{y + dy:.0f}", n.replace("C.C. ", ""), 14, "#ffffff", "600", anc))
     # camión y rival
     xb, yb = p[ORIGEN]
     s.append(_t(f"{xb + 46:.0f}", f"{yb - 18:.0f}", "🚚", 28))
     xr, yr = p["Unicentro"]
-    s.append(f'<rect x="{xr + 40:.0f}" y="{yr - 50:.0f}" width="196" height="26" rx="13" fill="{RUST}" fill-opacity=".18" stroke="{RUST}"/>')
-    s.append(_t(f"{xr + 138:.0f}", f"{yr - 32:.0f}", "Rival entra en el minuto 45", 12, "#ffd9cc", "600", "middle"))
-    s.append(_t(44, 584, "Ruta óptima en el equilibrio de Nash · zonas en disputa punteadas", 12, "#9fb0c8"))
+    s.append(f'<rect x="{xr + 40:.0f}" y="{yr - 50:.0f}" width="232" height="30" rx="15" fill="{RUST}" fill-opacity=".18" stroke="{RUST}"/>')
+    s.append(_t(f"{xr + 156:.0f}", f"{yr - 30:.0f}", "El rival llega en el minuto 45", 13, "#ffd9cc", "600", "middle"))
+    s.append(_t(44, 584, "Ruta elegida · las zonas punteadas son donde llega el rival", 12, "#9fb0c8"))
     # tarjetas de sprints
     for i, (n, titulo, tec, metrica) in enumerate(TARJETAS):
         y = 118 + i * 100

@@ -11,12 +11,12 @@ inyectar_css()
 
 VISTAS = {
     "Inicio": inicio.render,
-    "1 · Red logística": red.render,
-    "2 · Base de conocimiento": conocimiento.render,
-    "3 · Sistema experto": experto.render,
-    "4 · Competencia y ruta": competencia.render,
-    "5 · Prioridad difusa": difusa.render,
-    "6 · Carga por tienda": carga.render,
+    "1 · El mapa": red.render,
+    "2 · El experto": conocimiento.render,
+    "3 · El plan del día": experto.render,
+    "4 · El rival": competencia.render,
+    "5 · Grados de urgencia": difusa.render,
+    "6 · La carga": carga.render,
 }
 
 with st.sidebar:

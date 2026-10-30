@@ -34,21 +34,21 @@ def _funciones_pertenencia(finde, marca=None):
 
 def render():
     ss = st.session_state
-    encabezado("Sprint 4 · Prioridad difusa", "De “urgente / media / baja” a un grado de urgencia",
-               "En vez de cortar en un umbral, cada tienda cumple cada condición en cierto grado.")
+    encabezado("Paso 5 · Grados, no etiquetas", "¿Qué tan urgente es cada tienda?",
+               "En vez de “urgente o no”, medimos la urgencia de 0 a 100. Esto es lógica difusa.")
     h = servicio.hechos_tupla(ss.hechos)
     clasica = servicio.clasica(h, ss.finde)
     dif = servicio.difusa(h, ss.finde)
 
-    t0, t1, t2, t3 = st.tabs(["Pruébalo", "Cómo funciona", "Por tienda", "Impacto en la ruta"])
+    t0, t2, t3, t1 = st.tabs(["Pruébalo", "Por tienda", "Efecto en la ruta", "Cómo funciona"])
 
     with t0:
-        st.caption("Mueve los datos de una tienda y compara la regla clásica con la difusa.")
+        st.caption("Mueve los datos de una tienda y mira cómo cambia su urgencia.")
         c1, c2 = st.columns([2, 3])
         with c1:
-            inv = st.slider("Inventario (u.)", 0, 150, 15)
+            inv = st.slider("Unidades en la tienda", 0, 150, 15)
             ventas = st.slider("Ventas por semana", 0, 120, 55)
-            dias = st.slider("Días sin reabastecer", 0, 45, 12)
+            dias = st.slider("Días sin recibir mercancía", 0, 45, 12)
             quejas = st.slider("Quejas de clientes", 0, 8, 1)
         r = difuso.evaluar(inv, ventas, dias, quejas, ss.finde)
         clasico, regla = experto.regla_prioridad(inv, ventas, dias, quejas, ss.finde)
@@ -58,21 +58,21 @@ def render():
                 gauge=dict(axis=dict(range=[0, 100]), bar=dict(color=NAVY),
                            steps=[dict(range=[0, 35], color="#e7eaf0"), dict(range=[35, 65], color="#f3e3b8"),
                                   dict(range=[65, 100], color="#f0c4b6")])))
-            fig.update_layout(height=230, margin=dict(l=20, r=20, t=10, b=0))
+            fig.update_layout(height=300, margin=dict(l=20, r=20, t=10, b=0))
             grafico(fig)
             a, b = st.columns(2)
-            a.markdown("**Clásica**<br>" + pastilla(f"{clasico} · {regla}", COLOR_PRIORIDAD[clasico]), unsafe_allow_html=True)
-            b.markdown("**Difusa**<br>" + pastilla(f"{r['prioridad']} · {r['score']:.0f} pts", COLOR_PRIORIDAD[r["prioridad"]]),
+            a.markdown("**Con etiquetas**<br>" + pastilla(f"{clasico} · {regla}", COLOR_PRIORIDAD[clasico]), unsafe_allow_html=True)
+            b.markdown("**Con grados**<br>" + pastilla(f"{r['prioridad']} · {r['score']:.0f} pts", COLOR_PRIORIDAD[r["prioridad"]]),
                        unsafe_allow_html=True)
             fig = go.Figure(go.Bar(x=r["fuerza"][::-1], y=[x[0] for x in difuso.REGLAS_DIFUSAS][::-1], orientation="h",
                                    marker_color=[{"alta": RUST, "media": BRASS, "baja": GRIS}[x[2]] for x in difuso.REGLAS_DIFUSAS][::-1]))
             fig.update_layout(height=260, margin=dict(l=0, r=0, t=26, b=0), plot_bgcolor="white",
-                              title=dict(text="Fuerza de cada regla", font=dict(size=13, color=NAVY)),
+                              title=dict(text="Qué reglas pesan más", font=dict(size=13, color=NAVY)),
                               xaxis=dict(range=[0, 1], gridcolor=LINEA))
             grafico(fig)
 
     with t1:
-        st.markdown("**1 · Fuzzificar** (grados de 0 a 1)  →  **2 · Reglas** (Y = mínimo)  →  **3 · Centroide** (puntaje 0-100)")
+        st.markdown("**1 · Medir en grados** (de 0 a 1)  →  **2 · Aplicar las reglas**  →  **3 · Resumir en un puntaje** (0 a 100)")
         grafico(_funciones_pertenencia(ss.finde))
         c1, c2 = st.columns([3, 2])
         with c1:
@@ -152,4 +152,4 @@ def render():
                           yaxis=dict(gridcolor=LINEA, range=[0, 3.2]), legend=dict(orientation="h", y=-0.25))
         grafico(fig)
         nota("Con valores graduados, dos tiendas medias pueden pesar más que una urgente: la ruta puede cambiar.")
-    navegacion("5 · Prioridad difusa")
+    navegacion("5 · Grados de urgencia")

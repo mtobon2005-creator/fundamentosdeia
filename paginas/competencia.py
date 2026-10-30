@@ -3,9 +3,8 @@ import plotly.graph_objects as go
 import streamlit as st
 
 import servicio
-from motor import experto, genetico, juego
+from motor import genetico, juego, recorrido
 from motor.red import EN_DISPUTA, ZONAS
-from motor import recorrido
 from ui import (BRASS, DENIM, ETIQUETA, LINEA, NAVY, corto, encabezado, grafico, kpis, linea_tiempo, mapa,
                 navegacion, nota, pasos, selector_escenario)
 
@@ -21,42 +20,42 @@ def _volver_notebook():
     st.session_state.params.update(genetico.PARAMS_NOTEBOOK)
 
 
-def _tabla_pagos(seleccion):
+def _tabla_pagos():
     filas = ""
     for a in juego.ESTRATEGIAS_AC:
         filas += f"<tr><th>{a}</th>"
         for r in juego.ESTRATEGIAS_RIVAL:
             pa, pr = juego.PAGOS[(a, r)]
-            nash = " nash" if (a, r) in juego.NASH else ""
-            marca = "<br><b style='color:#b8892f'>Equilibrio de Nash</b>" if nash else ""
-            filas += (f"<td class='{nash.strip()}'><span class='p'>{pa} · {pr}</span>"
+            nash = (a, r) in juego.NASH
+            marca = "<br><b style='color:#b8892f'>La mejor jugada</b>" if nash else ""
+            filas += (f"<td class='{'nash' if nash else ''}'><span class='p'>{pa} · {pr}</span>"
                       f"<br><span class='t'>{juego.NOTAS[(a, r)]}</span>{marca}</td>")
         filas += "</tr>"
-    return ("<table class='matriz'><tr><th>AC \\ Rival</th><th>Se expande</th><th>Mantiene</th></tr>"
-            + filas + "</table>")
+    return ("<table class='matriz'><tr><th>Arturo Calle \\ Rival</th><th>El rival se expande</th>"
+            "<th>El rival se queda igual</th></tr>" + filas + "</table>")
 
 
 def render():
     ss = st.session_state
     P = ss.params
-    encabezado("Sprint 3 · Competencia y ruta", "Si el rival se expande, ¿qué hacemos?",
-               "El juego elige la estrategia; el algoritmo genético arma la ruta.")
+    encabezado("Paso 4 · El rival", "Si un competidor llega, ¿qué hacemos?",
+               "Elegimos una estrategia con teoría de juegos y un algoritmo busca la mejor ruta.")
     h = servicio.hechos_tupla(ss.hechos)
     selector_escenario("esc_comp")
-    ss.modo_ruta = st.segmented_control("Prioridad usada", ["Clásica", "Difusa"], default=ss.modo_ruta,
-                                        key="modo_comp", help="Clásica: urgente 3 · media 2 · baja 1 (notebook). "
-                                        "Difusa: valor continuo de 1 a 3.") or ss.modo_ruta
+    ss.modo_ruta = st.segmented_control(
+        "Prioridad", ["Clásica", "Difusa"], default=ss.modo_ruta, key="modo_comp",
+        help="Clásica: urgente / media / baja. Difusa: un grado de urgencia (paso 5).") or ss.modo_ruta
     ac, rv = ss.escenario.split("|")
 
-    with st.expander("Parámetros del modelo"):
+    with st.expander("Ajustes del modelo", icon=":material/tune:"):
         a, b, c = st.columns(3)
-        P["minuto"] = a.slider("Llegada del rival (min)", 20, 90, int(P["minuto"]), 5)
-        P["mult"] = b.slider("Efecto de concentrar (×)", 1.0, 3.0, float(P["mult"]), 0.25)
-        P["castigo"] = c.slider("Valor rescatado si llega tarde", 0.0, 1.0, float(P["castigo"]), 0.1)
+        P["minuto"] = a.slider("Minuto en que llega el rival", 20, 90, int(P["minuto"]), 5)
+        P["mult"] = b.slider("Peso de concentrar (×)", 1.0, 3.0, float(P["mult"]), 0.25)
+        P["castigo"] = c.slider("Valor que se salva si llegamos tarde", 0.0, 1.0, float(P["castigo"]), 0.1)
         d, e, _ = st.columns([1, 1, 2])
-        d.button("Otra semilla", on_click=_otra_semilla)
-        e.button("Valores del notebook", on_click=_volver_notebook)
-        nota(f"Semilla {P['semilla']}" + (" (igual al notebook)." if P["semilla"] == 42 else "."))
+        d.button("Probar otra semilla", on_click=_otra_semilla)
+        e.button("Valores originales", on_click=_volver_notebook)
+        nota(f"Semilla {P['semilla']}: número que fija el azar del buscador, para repetir resultados.")
 
     def res(ac_, rv_, modo=None):
         return servicio.resolver(h, ss.finde, ss.tiempo, modo or ss.modo_ruta, ac_, rv_,
@@ -64,60 +63,51 @@ def render():
 
     r = res(ac, rv)
     clasica = servicio.clasica(h, ss.finde)
-    t_juego, t_esc, t_ruta, t_val = st.tabs(["1 · Juego", "2 · Escenario", "3 · Ruta óptima", "4 · Validación"])
+    t_juego, t_esc, t_ruta, t_val = st.tabs(["El juego", "Qué vale cada tienda", "La ruta", "¿Es la mejor?"])
 
     with t_juego:
-        st.markdown(_tabla_pagos(ss.escenario), unsafe_allow_html=True)
-        nota("(pago de Arturo Calle · pago del rival), de 0 a 10. Son supuestos del modelo, no datos reales.")
+        st.markdown(_tabla_pagos(), unsafe_allow_html=True)
+        nota("(Arturo Calle · rival): participación de mercado de 0 a 10. Son supuestos del modelo, no datos reales.")
         _, peor = juego.minimax_ac()
         c1, c2 = st.columns(2)
-        c1.success("**Expandirse es dominante** para el rival (5 > 4 y 8 > 6). Sabiéndolo, a AC le conviene "
-                   "**concentrar** (6 > 3).", icon=":material/check_circle:")
-        c2.info(f"**Minimax** lo confirma: peor caso de concentrar {peor['Concentrar']}, de distribuir {peor['Distribuir']}.",
-                icon=":material/balance:")
+        c1.success("Al rival siempre le conviene **expandirse**. Sabiéndolo, a Arturo Calle le conviene **concentrar** "
+                   "su inventario donde llega el rival.", icon=":material/check_circle:")
+        c2.info(f"Peor caso: concentrar deja {peor['Concentrar']}, distribuir deja {peor['Distribuir']}. "
+                "Concentrar protege más.", icon=":material/balance:")
 
     with t_esc:
-        kpis([(f"× {P['mult']:g}", "valor de tiendas en disputa si concentras"),
-              (f"min {P['minuto']}", "llega el rival"), (f"{int(P['castigo'] * 100)} %", "valor si llegas tarde")])
+        kpis([(f"× {P['mult']:g}", "valor de tiendas en disputa si concentramos"),
+              (f"min {P['minuto']}", "llega el rival"), (f"{int(P['castigo'] * 100)} %", "valor si llegamos tarde")])
         base = servicio.valores_base(h, ss.finde, ss.modo_ruta)
-        filas = [{"Tienda": t, "Zona": ZONA_DE[t] + (" · en disputa" if t in EN_DISPUTA else ""),
-                  "Prioridad": clasica[t][0], "Valor base": round(base[t], 2),
-                  "Valor en el escenario": round(r["esc"]["valor_tienda"][t], 2)} for t in base]
-        st.dataframe(pd.DataFrame(filas).sort_values("Valor en el escenario", ascending=False),
-                     hide_index=True, width="stretch")
+        orden = sorted(base, key=lambda t: -r["esc"]["valor_tienda"][t])
+        fig = go.Figure(go.Bar(
+            x=[corto(t) for t in orden], y=[r["esc"]["valor_tienda"][t] for t in orden],
+            marker_color=[BRASS if t in EN_DISPUTA else DENIM for t in orden],
+            text=[f"{r['esc']['valor_tienda'][t]:.1f}" for t in orden], textposition="outside"))
+        fig.update_layout(height=380, margin=dict(l=0, r=0, t=30, b=0), plot_bgcolor="white", showlegend=False,
+                          title=dict(text="Valor de visitar cada tienda (dorado = zona en disputa)",
+                                     font=dict(size=14, color=NAVY)),
+                          yaxis=dict(gridcolor=LINEA, visible=False))
+        grafico(fig)
 
     with t_ruta:
         ok = abs(r["fitness"] - r["optimo"]) < 1e-9
-        kpis([(len(r["llegadas"]), "paradas"), (f"{r['total']} min", f"de {ss.tiempo} disponibles"),
-              (f"{r['fitness']:.2f}", "fitness"), ("Óptima" if ok else f"Óptimo {r['optimo']:.2f}", "vs. búsqueda exhaustiva", ok)])
-        st.markdown(pasos(r["ruta"], r["llegadas"], r["tarde"]), unsafe_allow_html=True)
+        kpis([(len(r["llegadas"]), "tiendas visitadas"), (f"{r['total']} min", f"de {ss.tiempo} disponibles"),
+              (f"{r['fitness']:.1f}", "puntaje de la ruta"),
+              ("Sí" if ok else "Casi", "¿es la mejor posible?", ok)])
         segs = recorrido.segmentos(r["ruta"])
-        minuto = st.slider("Mueve el camión por el día (min)", 0, r["total"], 0, key=f"hora_{ss.escenario}_{ss.modo_ruta}_{r['total']}")
-        x, y, estado, recorrido_pts = recorrido.posicion(segs, minuto)
-        izq, der = st.columns([3, 2])
-        with izq:
-            sub = {t: f"{clasica[t][0]} · vale {r['esc']['valor_tienda'][t]:.2f}" for t in r["esc"]["valor_tienda"]}
-            grafico(mapa(ruta=r["ruta"], llegadas=r["llegadas"], tarde=r["tarde"], subtitulos=sub,
-                         camion={"x": x, "y": y, "recorrido": recorrido_pts}))
-        with der:
-            st.markdown(f"### {estado}")
-            st.caption(f"Minuto {minuto} de {r['total']}")
-            for t, m_ in r["llegadas"].items():
-                if t not in EN_DISPUTA:
-                    et = "fuera de disputa"
-                elif not r["esc"]["hay_carrera"]:
-                    et = "en disputa, sin carrera"
-                else:
-                    et = "llega **después** del rival" if t in r["tarde"] else "llega **antes** del rival"
-                st.markdown(f"**min {m_} · {corto(t)}**  \n{clasica[t][0]} · {et}")
+        minuto = st.slider("Mueve el camión por el día (minutos)", 0, r["total"], 0,
+                           key=f"hora_{ss.escenario}_{ss.modo_ruta}_{r['total']}")
+        x, y, estado, pts = recorrido.posicion(segs, minuto)
+        st.markdown(f"### {estado} · minuto {minuto}")
+        sub = {t: f"{clasica[t][0]} · vale {r['esc']['valor_tienda'][t]:.1f}" for t in r["esc"]["valor_tienda"]}
+        grafico(mapa(ruta=r["ruta"], llegadas=r["llegadas"], tarde=r["tarde"], subtitulos=sub, altura=620,
+                     camion={"x": x, "y": y, "recorrido": pts}))
+        st.markdown(pasos(r["ruta"], r["llegadas"], r["tarde"]), unsafe_allow_html=True)
+        if r["esc"]["hay_carrera"]:
+            nota("En rojo: tienda a la que llegamos después que el rival.")
         grafico(linea_tiempo(r["llegadas"], r["total"], ss.tiempo,
                              P["minuto"] if r["esc"]["hay_carrera"] else None, r["tarde"]))
-        with st.expander("Cómo funciona el algoritmo genético"):
-            st.markdown(
-                "- **Cromosoma:** orden de visita de las 9 tiendas; entra solo si alcanza el tiempo.\n"
-                "- **Fitness:** valor entregado − 0,01 × minutos.\n"
-                "- **Config.:** población 30 · 60 generaciones · ruleta · cruce por orden · mutación 20 % · elitismo 2.\n"
-                "- **Control:** búsqueda exhaustiva de todas las rutas factibles.")
 
     with t_val:
         filas, aciertos = [], 0
@@ -127,37 +117,38 @@ def render():
                 coincide = abs(x["fitness"] - x["optimo"]) < 1e-9
                 aciertos += coincide
                 filas.append({
-                    "Escenario": ETIQUETA[f"{a_}|{r_}"] + (" · Nash" if (a_, r_) in juego.NASH else ""),
-                    "Ruta (minuto de llegada)": " → ".join(f"{corto(t)} ({m_})" for t, m_ in x["llegadas"].items()),
-                    "Tiempo": x["total"], "Fitness AG": round(x["fitness"], 2),
-                    "Óptimo": round(x["optimo"], 2), "¿Coincide?": "Sí" if coincide else "No"})
-        kpis([(f"{aciertos} de 4", "escenarios donde el genético llega al óptimo", True), (P["semilla"], "semilla")])
+                    "Escenario": ETIQUETA[f"{a_}|{r_}"],
+                    "Ruta": " → ".join(f"{corto(t)} ({m_})" for t, m_ in x["llegadas"].items()),
+                    "Minutos": x["total"], "Puntaje": round(x["fitness"], 1), "Mejor posible": round(x["optimo"], 1),
+                    "¿Coincide?": "Sí" if coincide else "No"})
+        kpis([(f"{aciertos} de 4", "escenarios donde la ruta es la mejor posible", True)])
         st.dataframe(pd.DataFrame(filas), hide_index=True, width="stretch")
+        nota("Comprobamos el buscador probando todas las rutas posibles una por una.")
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(y=r["prom"], mode="lines", name="Promedio de la población", line=dict(color=DENIM)))
-        fig.add_trace(go.Scatter(y=r["hist"], mode="lines", name="Mejor individuo", line=dict(color=BRASS, width=3)))
-        fig.update_layout(height=280, margin=dict(l=0, r=0, t=30, b=0), plot_bgcolor="white",
-                          title=dict(text=f"Convergencia · {ETIQUETA[ss.escenario]}", font=dict(size=14, color=NAVY)),
-                          xaxis=dict(title="generación", gridcolor=LINEA), yaxis=dict(title="fitness", gridcolor=LINEA),
-                          legend=dict(orientation="h", y=-0.3))
-        grafico(fig)
-
-        st.markdown("##### ¿Y si Arturo Calle no reacciona?")
+        st.markdown("#### ¿Y si no cambiamos nada?")
         vieja = servicio.resolver(h, ss.finde, ss.tiempo, ss.modo_ruta, "Distribuir", "Mantener",
                                   P["mult"], P["minuto"], P["castigo"], P["semilla"])
         real = res("Distribuir", "Expandirse")
-        esc_real = real["esc"]
-        f_vieja = genetico.calcular_fitness(list(vieja["llegadas"]), esc_real, ss.tiempo)
-        tarde_vieja = [t for t, m_ in vieja["llegadas"].items() if genetico.llega_tarde(esc_real, t, m_)]
+        f_vieja = genetico.calcular_fitness(list(vieja["llegadas"]), real["esc"], ss.tiempo)
+        tarde_vieja = [t for t, m_ in vieja["llegadas"].items() if genetico.llega_tarde(real["esc"], t, m_)]
         c1, c2 = st.columns(2)
         with c1.container(border=True):
-            st.markdown("**Ruta de siempre** (sin competencia)")
-            st.metric("Fitness con el rival expandiéndose", f"{f_vieja:.2f}")
+            st.markdown("**Seguir con la ruta de siempre**")
+            st.markdown(f"## {f_vieja:.1f} puntos")
             st.markdown(pasos(vieja["ruta"], vieja["llegadas"], tarde_vieja), unsafe_allow_html=True)
         with c2.container(border=True):
-            st.markdown("**Reordenando la ruta**")
-            st.metric("Fitness", f"{real['fitness']:.2f}", f"{real['fitness'] - f_vieja:+.2f}")
+            st.markdown("**Reorganizar la ruta**")
+            st.markdown(f"## {real['fitness']:.1f} puntos")
             st.markdown(pasos(real["ruta"], real["llegadas"], real["tarde"]), unsafe_allow_html=True)
-        nota("Ambas rutas se miden con el rival expandiéndose y AC distribuyendo.")
-    navegacion("4 · Competencia y ruta")
+
+        with st.expander("Cómo aprendió el buscador (algoritmo genético)"):
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(y=r["prom"], mode="lines", name="Promedio", line=dict(color=DENIM)))
+            fig.add_trace(go.Scatter(y=r["hist"], mode="lines", name="Mejor", line=dict(color=BRASS, width=3)))
+            fig.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), plot_bgcolor="white",
+                              xaxis=dict(title="generación", gridcolor=LINEA), yaxis=dict(title="puntaje", gridcolor=LINEA),
+                              legend=dict(orientation="h", y=-0.3))
+            grafico(fig)
+            st.markdown("Empieza con 30 rutas al azar y durante 60 generaciones elige las mejores, las mezcla y les "
+                        "cambia un detalle, como la evolución. Semilla: " + str(P["semilla"]) + ".")
+    navegacion("4 · El rival")

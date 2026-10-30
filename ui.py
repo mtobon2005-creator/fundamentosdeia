@@ -14,7 +14,8 @@ CSS = f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
 .stApp, .stMarkdown, .stCaption, label, p {{ font-family: 'Inter', system-ui, sans-serif; }}
-.block-container {{ padding-top: 2rem; max-width: 1120px; }}
+.block-container {{ padding-top: 4.5rem; max-width: 1240px; }}
+[data-testid="stHeader"] {{ background: rgba(255,255,255,.0); }}
 #MainMenu, footer {{ visibility: hidden; }}
 h1, h2, h3 {{ font-family: 'Fraunces', Georgia, serif !important; color: {NAVY}; letter-spacing: -.01em; }}
 h1 {{ font-weight: 700 !important; font-size: 2.3rem !important; }}
@@ -94,10 +95,10 @@ ETIQUETA = {
     "Distribuir|Mantener": "Distribuir · rival mantiene",
 }
 ICONOS = {
-    "Inicio": ":material/home:", "1 · Red logística": ":material/route:",
-    "2 · Base de conocimiento": ":material/menu_book:", "3 · Sistema experto": ":material/rule:",
-    "4 · Competencia y ruta": ":material/swords:", "5 · Prioridad difusa": ":material/tune:",
-    "6 · Carga por tienda": ":material/local_shipping:",
+    "Inicio": ":material/home:", "1 · El mapa": ":material/route:",
+    "2 · El experto": ":material/menu_book:", "3 · El plan del día": ":material/rule:",
+    "4 · El rival": ":material/swords:", "5 · Grados de urgencia": ":material/tune:",
+    "6 · La carga": ":material/local_shipping:",
 }
 
 

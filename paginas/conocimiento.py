@@ -1,68 +1,40 @@
 import pandas as pd
 import streamlit as st
 
-from motor.experto import ORDEN_PRIORIDAD, REGLAS, UMBRALES
-from motor.red import ORIGEN, RED
-from ui import COLOR_PRIORIDAD, encabezado, navegacion, nota, pastilla
-
-USO = {
-    "INVENTARIO_MUY_BAJO": ("Inventario muy bajo", "< 10 u.", "R1"),
-    "UMBRAL_INVENTARIO_CRITICO": ("Inventario crítico", "< 20 u.", "R4, R5"),
-    "INVENTARIO_SOBRANTE": ("Inventario sobrante", "> 100 u.", "R9"),
-    "UMBRAL_VENTAS_ALTAS_NORMAL": ("Ventas altas (normal)", "> 50 /sem.", "R4"),
-    "UMBRAL_VENTAS_ALTAS_FIN_DE_SEMANA": ("Ventas altas (fin de semana)", "> 40 /sem.", "R4"),
-    "UMBRAL_ROTACION_MUY_ALTA": ("Rotación muy alta", "> 70 /sem.", "R7"),
-    "LIMITE_DIAS_SIN_REABASTECER": ("Días sin reabastecer (media)", "> 14 días", "R6"),
-    "LIMITE_DIAS_MUY_URGENTE": ("Días sin reabastecer (urgente)", "> 25 días", "R3"),
-    "LIMITE_QUEJAS": ("Quejas de clientes", "> 3", "R2"),
-    "TIEMPO_ATENCION_POR_TIENDA": ("Atención por tienda", "15 min", "Plan del día"),
-}
+from motor.experto import REGLAS, UMBRALES
+from motor.red import RED
+from paginas.conocimiento_uso import USO
+from ui import COLOR_PRIORIDAD, encabezado, navegacion, pastilla
 
 ARQUITECTURA = """
 digraph G {
-  rankdir=TB; bgcolor="transparent";
-  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11, color="#1c2e4a", fillcolor="#eef1f6", fontcolor="#1c2e4a"];
-  edge [color="#b8892f"];
-  bc [label="Base de conocimiento\\nred + umbrales + 10 reglas"];
-  mt [label="Memoria de trabajo\\ndatos de hoy: 9 tiendas + tiempo"];
-  r  [label="Motor de inferencia 3.1\\nRazonamiento: reglas → prioridad", fillcolor="#fbf3df"];
-  s  [label="Motor de inferencia 3.2\\nSolución: ruta del día", fillcolor="#fbf3df"];
+  rankdir=LR; bgcolor="transparent"; nodesep=0.5; ranksep=0.7;
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=15, margin="0.3,0.18", color="#1c2e4a", fillcolor="#eef1f6", fontcolor="#1c2e4a"];
+  edge [color="#b8892f", penwidth=2];
+  bc [label="Lo que se sabe siempre\\n(mapa, límites, 10 reglas)"];
+  mt [label="Lo que pasa hoy\\n(inventario de cada tienda)"];
+  r  [label="Razonar\\n¿quién es urgente?", fillcolor="#fbf3df"];
+  s  [label="Decidir\\nla ruta del día", fillcolor="#fbf3df"];
   bc -> r; mt -> r; r -> s;
 }
 """
 
 
 def render():
-    encabezado("Sprint 2 · Base de conocimiento", "Lo que el experto sabe de antemano",
-               "Base de conocimiento + memoria de trabajo + motor de inferencia.")
-    c1, c2 = st.columns([3, 2])
-    with c1:
-        st.markdown("#### Cómo se conectan")
-        st.graphviz_chart(ARQUITECTURA)
-    with c2:
-        st.markdown("#### La base tiene tres piezas")
-        st.markdown("1. **Relaciones:** red de calles y jerarquía de prioridades.\n"
-                    "2. **Hechos:** umbrales del negocio.\n"
-                    "3. **Reglas:** 10 SI-ENTONCES; gana la primera que se cumple.")
+    encabezado("Paso 2 · El experto", "¿Cómo decide quién necesita mercancía?",
+               "Como un buen gerente: reglas claras aplicadas a los datos de hoy.")
+    st.graphviz_chart(ARQUITECTURA, width="stretch")
 
-    st.markdown("#### 1 · Relaciones")
-    r1, r2 = st.columns(2)
-    with r1:
+    st.markdown("#### Las 10 reglas")
+    cols = st.columns(2)
+    for i, (rid, cond, concl) in enumerate(REGLAS):
+        with cols[i // 5]:
+            st.markdown(f"**{rid}** · SI {cond}<br>{pastilla(concl, COLOR_PRIORIDAD[concl])}", unsafe_allow_html=True)
+
+    with st.expander("Ver los límites del negocio"):
+        st.dataframe(pd.DataFrame([{"Concepto": USO[k][0], "Límite": USO[k][1], "Regla": USO[k][2]} for k in UMBRALES]),
+                     hide_index=True, width="stretch")
+    with st.expander("Ver los tramos del mapa"):
         filas = [{"Desde": a, "Hasta": b, "Minutos": w} for a, vs in RED.items() for b, w in vs if a < b]
-        st.dataframe(pd.DataFrame(filas), hide_index=True, width="stretch", height=240)
-    with r2:
-        st.markdown(" ".join(pastilla(f"{p} · orden {o}", COLOR_PRIORIDAD[p]) for p, o in ORDEN_PRIORIDAD.items()),
-                    unsafe_allow_html=True)
-
-    st.markdown("#### 2 · Hechos generales (umbrales)")
-    st.dataframe(
-        pd.DataFrame([{"Concepto": USO[k][0], "Umbral": USO[k][1], "Se usa en": USO[k][2]} for k in UMBRALES]),
-        hide_index=True, width="stretch")
-
-    st.markdown("#### 3 · Reglas SI-ENTONCES")
-    for rid, cond, concl in REGLAS:
-        a, b, c = st.columns([1, 6, 2])
-        a.markdown(f"**{rid}**")
-        b.markdown(f"SI {cond}")
-        c.markdown(pastilla(concl, COLOR_PRIORIDAD[concl]), unsafe_allow_html=True)
-    navegacion("2 · Base de conocimiento")
+        st.dataframe(pd.DataFrame(filas), hide_index=True, width="stretch")
+    navegacion("2 · El experto")
