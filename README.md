@@ -52,3 +52,9 @@ La primera carga descarga Python, pandas y plotly en el navegador y puede tardar
 ## Imagen resumen y respaldo
 - `assets/resumen_proyecto.svg` / `.png`: imagen que resume el proyecto (la misma de la portada de la app).
 - La rama `respaldo-v1` guarda la versión de la app anterior al rediseño.
+
+## Antes de exponer
+- Abrir la app unos 5 minutos antes: en Streamlit Cloud se duerme si nadie la usa y tarda en despertar.
+- En el paso 4 dejar la prioridad **Clásica** (reproduce las entregas: Oviedo → Unicentro, 68 min). Con **Difusa** la ruta cambia a
+  Oviedo → Premium Plaza → El Tesoro; el paso 5 («Efecto en la ruta») explica por qué con los números reales.
+- El paso 6 sigue el mismo selector Clásica/Difusa; el reparto de unidades siempre usa la urgencia difusa.

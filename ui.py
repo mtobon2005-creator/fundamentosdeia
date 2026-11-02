@@ -90,6 +90,12 @@ def corto(t):
     return t.replace("C.C. ", "")
 
 
+def num(x, dec=None):
+    """Número con coma decimal (como en la presentación): num(11.32, 1) -> "11,3"; num(2.0) -> "2"."""
+    texto = f"{x:g}" if dec is None else f"{x:.{dec}f}"
+    return texto.replace(".", ",")
+
+
 def pastilla(texto, color):
     return f'<span class="pill" style="color:{color};border-color:{color}">{texto}</span>'
 
@@ -268,6 +274,7 @@ def linea_tiempo(llegadas, total, tiempo, minuto_rival=None, tarde=()):
 
 
 def grafico(fig):
+    fig.update_layout(separators=",.")  # coma decimal en ejes, textos y datos al pasar el cursor
     st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 
 

@@ -42,13 +42,15 @@ def resolver(h, finde, tiempo, modo, ac, rv, mult, minuto, castigo, semilla):
     """Escenario → algoritmo genético → ruta, más el control exhaustivo."""
     p = {"mult": mult, "minuto": minuto, "castigo": castigo}
     esc = genetico.construir_escenario(ac, rv, valores_base(h, finde, modo), p)
-    mejor, hist, prom = genetico.algoritmo_genetico(esc, tiempo, semilla)
+    # La prioridad difusa da valores más parecidos entre tiendas: más población y generaciones para no quedar en un óptimo local.
+    pob, gens = (60, 100) if modo == "Difusa" else (30, 60)
+    mejor, hist, prom = genetico.algoritmo_genetico(esc, tiempo, semilla, pob=pob, generaciones=gens)
     ruta, llegadas, total = genetico.decodificar(mejor, tiempo)
     _, opt = genetico.busqueda_exhaustiva(esc, tiempo)
     return {
         "esc": esc, "ruta": ruta, "llegadas": llegadas, "total": total,
         "fitness": genetico.calcular_fitness(mejor, esc, tiempo),
-        "hist": hist, "prom": prom, "optimo": opt,
+        "hist": hist, "prom": prom, "optimo": opt, "pob": pob, "gens": gens,
         "tarde": [t for t, m in llegadas.items() if genetico.llega_tarde(esc, t, m)],
     }
 
@@ -64,7 +66,7 @@ def plan_de_carga(llegadas, valores, hechos, capacidad, objetivo, concentrar, mu
         solicitud[t] = pct / 100 * faltante
         pesos[t] = solicitud[t] * (mult if concentrar and t in EN_DISPUTA else 1)
         filas.append({"Tienda": t, "Inventario": inv, "Faltante": faltante,
-                      "% a enviar": round(pct, 1), "Solicitud": round(solicitud[t], 1), "_reglas": reglas})
+                      "% a enviar": round(pct), "Solicitud": int(round(solicitud[t])), "_sol": solicitud[t], "_reglas": reglas})
     envio = difuso.repartir(solicitud, pesos, capacidad)
     for f in filas:
         f["Envío"] = envio[f["Tienda"]]

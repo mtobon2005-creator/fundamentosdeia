@@ -16,18 +16,26 @@ def trap(x, a, b, c, d):
 # 1) PRIORIDAD DIFUSA
 # Cada conjunto se centra en el umbral de las reglas clásicas (en el umbral la pertenencia es 0,5).
 # ---------------------------------------------------------------------------
+# Conjuntos que no activan ninguna regla; solo completan la escala para que ningún valor quede sin etiqueta
+# (si todo está "normal", se aplica la R10).
+SIN_REGLA = {"normal", "bajas", "pocos", "pocas"}
+
+
 def conjuntos_entrada(fin_de_semana):
     return {
         "Inventario": {
-            "muy bajo": (0, 0, 4, 16), "bajo": (0, 0, 10, 30),
-            "moderado": (0, 0, 20, 40), "alto": (70, 130, 200, 200),
+            "muy bajo": (0, 0, 4, 16), "bajo": (0, 0, 10, 30), "moderado": (0, 0, 20, 40),
+            "normal": (35, 55, 75, 100), "alto": (70, 130, 200, 200),
         },
         "Ventas semanales": {
+            "bajas": (0, 0, 20, 50),
             "altas": (20, 60, 200, 200) if fin_de_semana else (30, 70, 200, 200),
             "muy altas": (50, 90, 200, 200),
         },
-        "Días sin reabastecer": {"varios": (8, 20, 22, 32), "muchos": (15, 35, 60, 60)},
-        "Quejas": {"muchas": (2, 5, 10, 10)},
+        "Días sin reabastecer": {
+            "pocos": (0, 0, 6, 14), "varios": (8, 20, 22, 32), "muchos": (15, 35, 60, 60),
+        },
+        "Quejas": {"pocas": (0, 0, 1, 3), "muchas": (2, 5, 10, 10)},
     }
 
 

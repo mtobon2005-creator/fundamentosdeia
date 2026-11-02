@@ -42,7 +42,7 @@ def render():
 
     with st.expander("¿Por qué cada tienda tiene esa prioridad?"):
         st.markdown(" ".join(pastilla(f"{n} {p}", COLOR_PRIORIDAD[p]) for p, n in cuenta.items()), unsafe_allow_html=True)
-        filas = [{"Tienda": t, "Prioridad": p, "Regla": r, "Porque": TEXTO_REGLA[r]}
+        filas = [{"Tienda": corto(t), "Prioridad": p, "Regla": r, "Porque": TEXTO_REGLA[r]}
                  for t, (p, r) in sorted(clasica.items(), key=lambda x: experto.ORDEN_PRIORIDAD[x[1][0]])]
         st.dataframe(pd.DataFrame(filas), hide_index=True, width="stretch")
         if plan["pendientes"]:

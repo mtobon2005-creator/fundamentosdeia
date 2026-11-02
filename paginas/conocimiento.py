@@ -4,7 +4,7 @@ import streamlit as st
 from motor.experto import REGLAS, UMBRALES
 from motor.red import RED
 from paginas.conocimiento_uso import USO
-from ui import COLOR_PRIORIDAD, encabezado, navegacion, pastilla
+from ui import COLOR_PRIORIDAD, corto, encabezado, navegacion, pastilla
 
 ARQUITECTURA = """
 digraph G {
@@ -35,6 +35,6 @@ def render():
         st.dataframe(pd.DataFrame([{"Concepto": USO[k][0], "Límite": USO[k][1], "Regla": USO[k][2]} for k in UMBRALES]),
                      hide_index=True, width="stretch")
     with st.expander("Ver los tramos del mapa"):
-        filas = [{"Desde": a, "Hasta": b, "Minutos": w} for a, vs in RED.items() for b, w in vs if a < b]
+        filas = [{"Desde": corto(a), "Hasta": corto(b), "Minutos": w} for a, vs in RED.items() for b, w in vs if a < b]
         st.dataframe(pd.DataFrame(filas), hide_index=True, width="stretch")
     navegacion("2 · El experto")
